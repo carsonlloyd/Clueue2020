@@ -23,117 +23,119 @@ def send_success_connect(send_to_id, connected_client, failed_to_connect, is_gam
 
 	send_message(send_to_id, message, debug_flag)
 
-def send_player_connected(send_to_id, data,debug_flag=False):
+def send_player_connected(send_to_id, connected_client, debug_flag=False):
+	message = {	"message_type": "player_connected",
+				"connected_client": connected_client
+				}
+	send_message(send_to_id, message, debug_flag)
+
+def send_character_unavail(send_to_id, debug_flag=False):
+	message = {	"message_type": "character_unavail"}
+	send_message(send_to_id, message, debug_flag)
+
+def send_choose_character(send_to_id, characters_available, debug_flag=False):
+	message = {	"message_type": "choose_character",
+				"characters_available": characters_available
+				}
+	send_message(send_to_id, message, debug_flag)
+
+# TODO: Carson continue here
+def send_character_choice(send_to_id, data, debug_flag=False):
 	message = {	"message_type": "",
 				}
 	send_message(send_to_id, message, debug_flag)
 
-def send_chracter_unavail(send_to_id, data,debug_flag=False):
+def send_start_game(send_to_id, data, debug_flag=False):
 	message = {	"message_type": "",
 				}
 	send_message(send_to_id, message, debug_flag)
 
-def send_choose_character(send_to_id, data,debug_flag=False):
+def send_card_set(send_to_id, data, debug_flag=False):
 	message = {	"message_type": "",
 				}
 	send_message(send_to_id, message, debug_flag)
 
-def send_character_choice(send_to_id, data,debug_flag=False):
+def send_ready_for_turns(send_to_id, data, debug_flag=False):
 	message = {	"message_type": "",
 				}
 	send_message(send_to_id, message, debug_flag)
 
-def send_start_game(send_to_id, data,debug_flag=False):
+def send_take_turn(send_to_id, data, debug_flag=False):
 	message = {	"message_type": "",
 				}
 	send_message(send_to_id, message, debug_flag)
 
-def send_card_set(send_to_id, data,debug_flag=False):
+def send_end_turn(send_to_id, data, debug_flag=False):
 	message = {	"message_type": "",
 				}
 	send_message(send_to_id, message, debug_flag)
 
-def send_ready_for_turns(send_to_id, data,debug_flag=False):
+def send_player_move(send_to_id, data, debug_flag=False):
 	message = {	"message_type": "",
 				}
 	send_message(send_to_id, message, debug_flag)
 
-def send_take_turn(send_to_id, data,debug_flag=False):
+def send_cannot_move(send_to_id, data, debug_flag=False):
 	message = {	"message_type": "",
 				}
 	send_message(send_to_id, message, debug_flag)
 
-def send_end_turn(send_to_id, data,debug_flag=False):
+def send_player_move_broadcast(send_to_id, data, debug_flag=False):
 	message = {	"message_type": "",
 				}
 	send_message(send_to_id, message, debug_flag)
 
-def send_player_move(send_to_id, data,debug_flag=False):
+def send_make_suggestion(send_to_id, data, debug_flag=False):
 	message = {	"message_type": "",
 				}
 	send_message(send_to_id, message, debug_flag)
 
-def send_cannot_move(send_to_id, data,debug_flag=False):
+def send_suggestion(send_to_id, data, debug_flag=False):
 	message = {	"message_type": "",
 				}
 	send_message(send_to_id, message, debug_flag)
 
-def send_player_move_broadcast(send_to_id, data,debug_flag=False):
+def send_cannot_suggest(send_to_id, data, debug_flag=False):
 	message = {	"message_type": "",
 				}
 	send_message(send_to_id, message, debug_flag)
 
-def send_make_suggestion(send_to_id, data,debug_flag=False):
+def send_make_accusation(send_to_id, data, debug_flag=False):
 	message = {	"message_type": "",
 				}
 	send_message(send_to_id, message, debug_flag)
 
-def send_suggestion(send_to_id, data,debug_flag=False):
+def send_accusation(send_to_id, data, debug_flag=False):
 	message = {	"message_type": "",
 				}
 	send_message(send_to_id, message, debug_flag)
 
-def send_cannot_suggest(send_to_id, data,debug_flag=False):
-	message = {	"message_type": "",
-				}
-	send_message(send_to_id, message, debug_flag)
-	
-def send_make_accusation(send_to_id, data,debug_flag=False):
+def send_accusation_made(send_to_id, data, debug_flag=False):
 	message = {	"message_type": "",
 				}
 	send_message(send_to_id, message, debug_flag)
 
-def send_accusation(send_to_id, data,debug_flag=False):
+def send_game_win_accusation(send_to_id, data, debug_flag=False):
 	message = {	"message_type": "",
 				}
 	send_message(send_to_id, message, debug_flag)
 
-def send_accusation_made(send_to_id, data,debug_flag=False):
+def send_make_disprove(send_to_id, data, debug_flag=False):
 	message = {	"message_type": "",
 				}
 	send_message(send_to_id, message, debug_flag)
 
-def send_game_win_accusation(send_to_id, data,debug_flag=False):
+def send_cannot_disprove(send_to_id, data, debug_flag=False):
 	message = {	"message_type": "",
 				}
 	send_message(send_to_id, message, debug_flag)
 
-def send_make_disprove(send_to_id, data,debug_flag=False):
+def send_disprove_made(send_to_id, data, debug_flag=False):
 	message = {	"message_type": "",
 				}
 	send_message(send_to_id, message, debug_flag)
 
-def send_cannot_disprove(send_to_id, data,debug_flag=False):
-	message = {	"message_type": "",
-				}
-	send_message(send_to_id, message, debug_flag)
-
-def send_disprove_made(send_to_id, data,debug_flag=False):
-	message = {	"message_type": "",
-				}
-	send_message(send_to_id, message, debug_flag)
-
-def send_disprove_done(send_to_id, data,debug_flag=False):
+def send_disprove_done(send_to_id, data, debug_flag=False):
 	message = {	"message_type": "",
 				}
 	send_message(send_to_id, message, debug_flag)
