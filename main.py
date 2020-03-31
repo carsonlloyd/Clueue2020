@@ -4,7 +4,7 @@ import time, os, random, argparse, socket, selectors, types
 
 #Globals
 mainBoard = None
-players = None
+players = []
 validInputs = ['up','down','left','right','secret','suggest','accuse']
 playerNames = ['Col. Mustard','Miss Scarlet','Prof. Plum','Mrs. Peacock','Mr. Green','Mrs. White']
 ADDR = 'localhost'
@@ -27,6 +27,7 @@ def initNetwork():
         start_connections(ADDR,PORT)
 
 def initPlayers(numPlayers):
+    global players
     players = [Player(playerNames[i]) for i in random.sample(range(6),numPlayers)]
     for playerIdx,roomIdx in enumerate(random.sample(range(9),numPlayers)):
         mainBoard.rooms[roomIdx].addPlayer(players[playerIdx]) #kinda bad encapsulation but thats pythons fault
@@ -46,6 +47,9 @@ def initialize():
     #randomly place players
     initPlayers(4)
     mainBoard.updatePlayerLocationsOnBoard()
+    
+    #TODO: remove after demo
+    print('For the purposes of this demo, you are playing as ' + str(players[0]))
 
     #render inital gameboard
     render()
@@ -109,7 +113,9 @@ def getInput():
     while action not in validInputs:
         action = input('please select an action (up, down, left, right, secret, accuse, suggest): ')
 
-    events = selector.select(timeout=1)
+        
+
+    events = selector.select(timeout=.1)
     #Host network code to accept player input messages
     if HOST:
         for key, mask in events:
@@ -126,10 +132,12 @@ def getInput():
         if not selector.get_map():
             print('something probably broke')
 
+    return action
 
 
 
-def update():
+
+def update(action):
     '''
     Processing inputs and updates game state according to the rules
     of the game.
@@ -137,7 +145,11 @@ def update():
     For clients they will receive the master game state update message
     and update their state accordingly
     '''
-    pass
+    #TODO: remove after demo
+    global players
+    mainBoard.movePlayer(players[0], action)
+
+    mainBoard.updatePlayerLocationsOnBoard()
 
 def render():
     '''
@@ -161,8 +173,8 @@ def main():
     initialize()
 
     while True: #TODO: Change to while game not won
-        getInput()
-        update()
+        action = getInput()
+        update(action)
         render()
 
     selector.close()

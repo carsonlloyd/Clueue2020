@@ -5,7 +5,7 @@ class Board:
 
     def __init__(self):
         # Creates a brand new, blank board data structure.
-        self.rooms = [Room.Room(roomName) for roomName in Room.RoomName]
+        self.rooms = [Room.Room(roomType) for roomType in Room.RoomType]
         self.board = []
 
         self.room_empty =    '|            |----------|            |----------|            |\n'
@@ -64,25 +64,23 @@ class Board:
                 self.board[idx] += spacer
             self.board[idx] += '\n'
 
-    def move_player(self, board, player, movement):
-        x,y = getPlayerPosition(player) #need to write this still
-        board[y][x] = ' '
-        if (movement == 'north') and (y > 2):
-            board[y - 4][x] = player
-        elif (movement == 'south') and (y < 18):
-            board[y + 4][x] = player
-        elif (movement == 'east') and (x < 55):
-            board[y][x+12] = player
-        elif (movement == 'west') and (x >7):
-            board[y][x-12] = player
-        elif (movement == 'northeast') and ((y >2) and (x < 55)):
-            board[y-8][x + 24] = player
-        elif (movement == 'northwest') and ((y >2) and (x > 7)):
-            board[y-8][x - 24] = player
-        elif (movement == 'southeast') and ((y < 18) and (x < 55)):
-            board[y+8][x + 24] = player
-        elif (movement == 'southwest') and ((y < 18) and (x > 7)):
-            board[y+8][x - 24] = player
+    def getPlayerRoom(self, player):
+        for room in self.rooms:
+            if player in room.getPlayers():
+                return room
+        print('ERROR: Player was in none of the rooms')
+        exit()
+
+    def movePlayer(self, player, action):
+        room = self.getPlayerRoom(player) #need to write this still
+        global allowedMoves, roomAdjacencies
+        print(room.getRoomType())
+        if action in Room.allowedMoves[room.getRoomType()]:
+            room.removePlayer(player)
+            newRoomType = Room.roomAdjacencies[room.getRoomType()][action]
+            for room in self.rooms:
+                if room.getRoomType() == newRoomType:
+                    room.addPlayer(player)
+                    break
         else:
             print("invalid move") # invalid move message - integrate with other messaging
-        return board
