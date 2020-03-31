@@ -1,12 +1,32 @@
 from Board import Board
 from Player import Player
-import time, os, random
+import time, os, random, argparse, socket, selectors
 
 #Globals
 mainBoard = None
 players = None
 validInputs = ['up','down','left','right','secret','suggest','accuse']
 playerNames = ['Col. Mustard','Miss Scarlet','Prof. Plum','Mrs. Peacock','Mr. Green','Mrs. White']
+ADDR = 'localhost'
+PORT = 65432
+selector = selectors.DefaultSelector()
+
+
+def initNetwork():
+    global HOST, ADDR, PORT, selector
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        if HOST:
+            s.bind((ADDR, PORT))
+            s.listen()
+            print('listening on ', (ADDR,PORT))
+            s.setblocking(False)
+            sel.register(s,selectors.EVENT_READ, data=None)
+            conn, addr = s.accept
+            print('server started, waiting for clients...')
+        else:
+            s.connect((ADDR, PORT))
+
+
 
 def initPlayers(numPlayers):
     players = [Player(playerNames[i]) for i in random.sample(range(6),numPlayers)]
@@ -21,6 +41,7 @@ def initialize():
     @return a new, game board and state
     '''
     print('initializing')
+    initNetwork()
     global mainBoard, players
     mainBoard = Board()
 
@@ -44,6 +65,16 @@ def getInput():
     action = ''
     while action not in validInputs:
         action = input('please select an action (up, down, left, right, secret, accuse, suggest): ')
+
+    #Host network code to accept player input messages
+    if HOST:
+        events = selector.select(timeout=None)
+        for key, mask in events:
+            if key.data is None:
+                accept_wrapper(key.fileobj)
+            else:
+                service_connection(key, mask)
+
 
 
 
@@ -84,4 +115,12 @@ def main():
         render()
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-host', action='store_true', dest='host', default=False,
+                        help='Determines whether this instance is the network host')
+    results = parser.parse_args()
+    global HOST
+    HOST = results.host
+    print('HOST:' + str(HOST))
+
     main()
