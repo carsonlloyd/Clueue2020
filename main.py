@@ -53,12 +53,15 @@ def addMessage(message, connid):
 
 def accept_wrapper(sock):
     conn, addr = sock.accept() #should be ready to read
+    global playerAddresses
+    playerAddresses[len(playerAddresses)] = addr
+    messages[addr] = []
     print('accepted connection from: ', addr)
     conn.setblocking(False)
     data = types.SimpleNamespace(connid=addr, inb=b'', outb=b'')
     events = selectors.EVENT_READ | selectors.EVENT_WRITE
     selector.register(conn, events, data=data)
-    Message.send_player_connected(0, str(players[0]))
+    Message.send_player_connected(addr, str(players[len(playerAddresses)]))
 
 def service_connection(key, mask):
     global messages
@@ -67,7 +70,7 @@ def service_connection(key, mask):
     if mask & selectors.EVENT_READ:
         recv_data = sock.recv(256)
         if recv_data:
-            print('received' + repr(recv_data))
+            print('received ' + repr(recv_data))
             data.outb += recv_data
         else:
             pass
@@ -76,31 +79,29 @@ def service_connection(key, mask):
             #selector.unregister(sock)
             #sock.close()
     if mask & selectors.EVENT_WRITE:
-        for m in messages:
-            if m != []:
-                data.outb = m.pop()
-                print('sending ', repr(data.outb), ' to ', data.connid)
-                sent = sock.send(data.outb) # Should be ready to write
-                data.outb = data.outb[sent:]
-
+        if messages[data.connid]:
+            data.outb = messages[data.connid].pop()
+            print('sending ', repr(data.outb), ' to ', data.connid)
+            sent = sock.send(data.outb) # Should be ready to write
+            data.outb = data.outb[sent:]
     else:
         print('no mask')
 
 def start_connections(host, port, num_conns=1):
     global messages
-    server_addr = ('localhost', 65432)
-    for connid in range(0, num_conns):
-        print('starting connection ' + str(connid) + ' to ' + str(server_addr))
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.setblocking(False)
-        sock.connect_ex(server_addr)
-        events = selectors.EVENT_READ | selectors.EVENT_WRITE
-        data = types.SimpleNamespace(connid=connid,
-                                     msg_total = sum(len(m) for m in messages),
-                                     recv_total=0,
-                                     messages=messages[connid], #list(messages),
-                                     outb=b'')
-        selector.register(sock, events, data=data)
+    server_addr = (host,port)
+    print('starting connection ' + ' to ' + str(server_addr))
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.setblocking(False)
+    sock.connect_ex(server_addr)
+    events = selectors.EVENT_READ | selectors.EVENT_WRITE
+    data = types.SimpleNamespace(connid=(host,port),
+                                    msg_total = 0,
+                                    recv_total=0,
+                                    messages=[],
+                                    outb=b'')
+    messages[server_addr] = []
+    selector.register(sock, events, data=data)
 
 def send_message(message):
     pass
