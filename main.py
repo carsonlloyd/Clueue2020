@@ -15,8 +15,7 @@ def initNetwork():
         server_socket.setblocking(False)
         selector.register(server_socket,selectors.EVENT_READ, data=None)
         print('server started, waiting for clients...')
-    else:
-        start_connections(ADDR,PORT)
+    start_connections(ADDR,PORT)
 
 def initPlayers(numPlayers):
     global players
@@ -41,11 +40,22 @@ def initialize():
     initNetwork()
     #mainBoard.updatePlayerLocationsOnBoard()
     
-    #TODO: remove after demo
-    print('For the purposes of this demo, you are playing as ' + str(players[0]))
-
     #render inital gameboard
     #render()
+
+def determineOrder():
+    pass
+
+def determineKnowledges():
+    pass
+
+def sendAll(messageFunc, kwargs):
+    '''
+    Sends a given message to all players through the messageFunc
+    ex. sendAll(message_drivers.send_character_unavail, {})
+    '''
+    for addr in playerAddresses.values():
+        messageFunc(addr, **kwargs)
 
 def addMessage(message, connid):
     global messages
@@ -61,17 +71,32 @@ def accept_wrapper(sock):
     data = types.SimpleNamespace(connid=addr, inb=b'', outb=b'')
     events = selectors.EVENT_READ | selectors.EVENT_WRITE
     selector.register(conn, events, data=data)
-    Message.send_player_connected(addr, str(players[len(playerAddresses)]))
+
+    players[len(playerAddresses)-1].addr = addr
+    #confirms character as well, currently. #TODO: character choices
+    Message.send_player_connected(addr, str(players[len(playerAddresses)-1]))
+    
+    if len(playerAddresses) == numPlayers:
+        #for addr in playerAddresses.values():
+        #    Message.send_character_confirm(addr, {'player':str()})
+        sendAll(Message.send_player_positions, {'positions':{str(player):mainBoard.getPlayerRoom(player).getRoomType() for player in players}})
+        determineOrder()
+        determineKnowledges()
+        #set up game.
+        #determine turn order
+        #send initial positions
+        #send game start message
+        #send first turn message
 
 def service_connection(key, mask):
     global messages
     sock = key.fileobj
     data = key.data
+    recv_data = None
     if mask & selectors.EVENT_READ:
         recv_data = sock.recv(256)
         if recv_data:
             print('received ' + repr(recv_data))
-            data.outb += recv_data
         else:
             pass
             #print('no data received')
@@ -86,6 +111,8 @@ def service_connection(key, mask):
             data.outb = data.outb[sent:]
     else:
         print('no mask')
+
+    return recv_data
 
 def start_connections(host, port, num_conns=1):
     global messages
@@ -103,8 +130,15 @@ def start_connections(host, port, num_conns=1):
     messages[server_addr] = []
     selector.register(sock, events, data=data)
 
-def send_message(message):
-    pass
+def parseMessage(jsonMessage):
+    '''
+    Receives message as bytes from the socket. Must be converted to a readable JSON format
+    '''
+    message = json.loads(jsonMessage)
+    if message['message_type'] == 'player_connected':
+        players[0].setName(message['connected_client'])
+        print('You will be playing as ' + message['connected_client'])
+
 
 def parseAction(action):
     if action in ['up','down','left','right']:
@@ -140,22 +174,25 @@ def update(action):
     #TODO: remove after demo
     global players, updated
 
-    events = selector.select(timeout=.1)
+    events = selector.select(timeout=None)
     #Host network code to accept player input messages
-    if HOST:
-        for key, mask in events:
-            if key.data is None:
-                accept_wrapper(key.fileobj)
-            else:
-                service_connection(key, mask)
-    else:
-        #Client code
-        if events:
-            for key, mask in events:
-                service_connection(key, mask)
-        #check for a socket being monitored to continue
-        if not selector.get_map():
-            print('something probably broke')
+    message = None
+    #if HOST:
+    for key, mask in events:
+        if key.data is None and HOST:
+            accept_wrapper(key.fileobj)
+        else:
+            message = service_connection(key, mask)
+            if message:
+                parseMessage(message)
+    #else:
+    #    #Client code
+    #    if events:
+    #        for key, mask in events:
+    #            message = service_connection(key, mask)
+    #    #check for a socket being monitored to continue
+    #    if not selector.get_map():
+    #        print('something probably broke')
 
     #mainBoard.movePlayer(players[0], action)
     #mainBoard.updatePlayerLocationsOnBoard()

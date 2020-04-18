@@ -24,6 +24,13 @@ def send_message(send_to_id, message, debug_flag=False):
 	else:
 		addMessage(messageBytes, send_to_id)
 
+def send_player_positions(send_to_id, positions, debug_flag=False):
+	message = {	"message_type": "player_positions",
+				"positions": positions,
+				}
+
+	send_message(send_to_id, message, debug_flag)
+
 
 def send_success_connect(send_to_id, connected_client, failed_to_connect, is_game_full=False, debug_flag=False):
 	message = {	"message_type": "success_connect",
@@ -54,6 +61,12 @@ def send_character_choice(send_to_id, character_choice, client_id, debug_flag=Fa
 	message = {	"message_type": "character_choice",
 				"character_choice": character_choice,
 				"client_id": client_id
+				}
+	send_message(send_to_id, message, debug_flag)
+
+def send_character_confirm(send_to_id, character, debug_flag=False):
+	message = {	"message_type": "character_confirm",
+				"character": character,
 				}
 	send_message(send_to_id, message, debug_flag)
 
