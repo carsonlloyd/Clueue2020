@@ -6,6 +6,9 @@ import time, os, random, argparse, socket, selectors, types, json
 from typing import List, Dict
 import message_drivers as Message
 
+#########################################################################
+# This is all networking garbage, you probably dont want this
+##########################################################################
 def initNetwork():
     global HOST, ADDR, PORT, selector, server_socket
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -17,42 +20,6 @@ def initNetwork():
         selector.register(server_socket,selectors.EVENT_READ, data=None)
         print('server started, waiting for clients...')
     start_connections(ADDR,PORT)
-
-def initPlayers(numPlayers):
-    global players
-    players = [Player(playerNames[i]) for i in random.sample(range(6),numPlayers)]
-    if HOST:
-        for playerIdx,roomIdx in enumerate(random.sample(range(9),numPlayers)):
-            mainBoard.rooms[roomIdx].addPlayer(players[playerIdx]) #kinda bad encapsulation but thats pythons fault
-
-def initialize():
-    '''
-    Initialize game board
-    @suggest Connect players?
-
-    @return a new, game board and state
-    '''
-    global mainBoard, players, messages
-    print('initializing')
-
-    mainBoard = Board()
-    #randomly place players
-    initPlayers(numPlayers)
-    
-    initNetwork()
-    #mainBoard.updatePlayerLocationsOnBoard()
-    
-    #render inital gameboard
-    #render()
-
-def determineOrder():
-    '''
-    Currently going to be the default connection order for demo purposes
-    '''
-    pass
-
-def determineKnowledges():
-    pass
 
 def sendAll(messageFunc, kwargs):
     '''
@@ -135,6 +102,38 @@ def start_connections(host, port, num_conns=1):
                                     outb=b'')
     messages[server_addr] = []
     selector.register(sock, events, data=data)
+#########################################################################
+# END OF NETWORKING GARBAGE
+##########################################################################
+
+def initPlayers(numPlayers):
+    global players
+    players = [Player(playerNames[i]) for i in random.sample(range(6),numPlayers)]
+    if HOST:
+        for playerIdx,roomIdx in enumerate(random.sample(range(9),numPlayers)):
+            mainBoard.rooms[roomIdx].addPlayer(players[playerIdx]) #kinda bad encapsulation but thats pythons fault
+
+def initialize():
+    '''
+    Initialize game board
+    '''
+    global mainBoard
+    print('initializing')
+
+    mainBoard = Board()
+    #randomly place players
+    initPlayers(numPlayers)
+    initNetwork()
+
+def determineOrder():
+    '''
+    Currently going to be the default connection order for demo purposes
+    '''
+    pass
+
+def determineKnowledges():
+    pass
+
 
 def setPositions(positions):
     '''
@@ -168,21 +167,24 @@ def incrementTurn():
 def parseMessage(jsonMessage):
     '''
     Receives message as bytes from the socket. Must be converted to a readable JSON format
+    This is where most of the magic is going to happen
+    Feel free to break out anything into functions, I'll probably do that later for most of this
+    to make it look less gross
     '''
     global isTurn, gameStarted, updated, turn
     message = json.loads(jsonMessage)
     if message['message_type'] == 'player_connected':
         players[0].setName(message['connected_client'])
         print('You will be playing as ' + message['connected_client'])
-    if message['message_type'] == 'player_positions' and not HOST:
+    elif message['message_type'] == 'player_positions' and not HOST:
         setPositions(message['positions'])
-    if message['message_type'] == 'start_game':
+    elif message['message_type'] == 'start_game':
         updated = True
         gameStarted = True
         print('game started')
-    if message['message_type'] == 'ready_for_turn':
+    elif message['message_type'] == 'ready_for_turn':
         isTurn = True
-    if message['message_type'] == 'player_move' and HOST:
+    elif message['message_type'] == 'player_move' and HOST:
         player = getPlayerBySymbol(message['player'])
         if mainBoard.movePlayer(player, message['direction']):
             updated = True
@@ -190,14 +192,14 @@ def parseMessage(jsonMessage):
         else:
             #send failure message so they can resend turn
             Message.send_cannot_move(playerAddresses[turn])
-    if message['message_type'] == 'cannot_move':
+    elif message['message_type'] == 'cannot_move':
         isTurn = True
-    if message['message_type'] == 'update_player_pos' and not HOST:
+    elif message['message_type'] == 'update_player_pos' and not HOST:
         updated = True
         player = getPlayerBySymbol(message['player'])
         mainBoard.updatePlayerPos(player, message['pos'])
         Message.send_end_turn((ADDR,PORT), str(player))
-    if message['message_type'] == 'end_turn' and HOST and message['client_id'] == str(players[turn]):
+    elif message['message_type'] == 'end_turn' and HOST and message['client_id'] == str(players[turn]):
         incrementTurn()
         Message.send_ready_for_turn(playerAddresses[turn])
         
@@ -252,16 +254,7 @@ def update(action):
             message = service_connection(key, mask)
             if message:
                 parseMessage(message)
-    #else:
-    #    #Client code
-    #    if events:
-    #        for key, mask in events:
-    #            message = service_connection(key, mask)
-    #    #check for a socket being monitored to continue
-    #    if not selector.get_map():
-    #        print('something probably broke')
 
-    #mainBoard.movePlayer(players[0], action)
     mainBoard.updatePlayerLocationsOnBoard()
 
 def render():
