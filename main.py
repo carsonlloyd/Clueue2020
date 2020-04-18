@@ -1,24 +1,16 @@
+from Globals import *
 from Board import Board
 from Player import Player
-import time, os, random, argparse, socket, selectors, types
-
-#Globals
-mainBoard = None
-players = []
-validInputs = ['up','down','left','right','secret','suggest','accuse']
-playerNames = ['Col. Mustard','Miss Scarlet','Prof. Plum','Mrs. Peacock','Mr. Green','Mrs. White']
-ADDR = 'localhost'
-PORT = 65432
-server_socket = None
-selector = selectors.DefaultSelector()
-
+import time, os, random, argparse, socket, selectors, types, json
+from typing import List, Dict
+import message_drivers as Message
 
 def initNetwork():
     global HOST, ADDR, PORT, selector, server_socket
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     if HOST:
         server_socket.bind((ADDR, PORT))
-        server_socket.listen()
+        server_socket.listen() #add num_players for max socket count
         print('listening on ', (ADDR,PORT))
         server_socket.setblocking(False)
         selector.register(server_socket,selectors.EVENT_READ, data=None)
@@ -39,20 +31,25 @@ def initialize():
 
     @return a new, game board and state
     '''
+    global mainBoard, players, messages
     print('initializing')
-    initNetwork()
-    global mainBoard, players
-    mainBoard = Board()
 
+    mainBoard = Board()
     #randomly place players
-    initPlayers(4)
-    mainBoard.updatePlayerLocationsOnBoard()
+    initPlayers(numPlayers)
+    
+    initNetwork()
+    #mainBoard.updatePlayerLocationsOnBoard()
     
     #TODO: remove after demo
     print('For the purposes of this demo, you are playing as ' + str(players[0]))
 
     #render inital gameboard
-    render()
+    #render()
+
+def addMessage(message, connid):
+    global messages
+    messages[connid].append(message)
 
 def accept_wrapper(sock):
     conn, addr = sock.accept() #should be ready to read
@@ -61,35 +58,39 @@ def accept_wrapper(sock):
     data = types.SimpleNamespace(connid=addr, inb=b'', outb=b'')
     events = selectors.EVENT_READ | selectors.EVENT_WRITE
     selector.register(conn, events, data=data)
+    Message.send_player_connected(0, str(players[0]))
 
 def service_connection(key, mask):
+    global messages
     sock = key.fileobj
     data = key.data
     if mask & selectors.EVENT_READ:
-        recv_data = sock.recv(1024)
+        recv_data = sock.recv(256)
         if recv_data:
             print('received' + repr(recv_data))
             data.outb += recv_data
         else:
-            print('closing connection to: ', data.addr)
-            selector.unregister(sock)
-            sock.close()
+            pass
+            #print('no data received')
+            #print('closing connection to: ', data.addr)
+            #selector.unregister(sock)
+            #sock.close()
     if mask & selectors.EVENT_WRITE:
-        if not HOST and not data.outb and data.messages:
-            data.outb = data.messages.pop(0)
-        if data.outb:
-            print('sending', repr(data.outb), 'to', data.connid)
-            sent = sock.send(data.outb) # Should be ready to write
-            data.outb = data.outb[sent:]
+        for m in messages:
+            if m != []:
+                data.outb = m.pop()
+                print('sending ', repr(data.outb), ' to ', data.connid)
+                sent = sock.send(data.outb) # Should be ready to write
+                data.outb = data.outb[sent:]
+
     else:
         print('no mask')
 
 def start_connections(host, port, num_conns=1):
-    messages = [b'message 1', b'message 2']
+    global messages
     server_addr = ('localhost', 65432)
-    for i in range(0, num_conns):
-        connid = i+1
-        print('starting connection,' + str(connid) + 'to' + str(server_addr))
+    for connid in range(0, num_conns):
+        print('starting connection ' + str(connid) + ' to ' + str(server_addr))
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.setblocking(False)
         sock.connect_ex(server_addr)
@@ -97,9 +98,16 @@ def start_connections(host, port, num_conns=1):
         data = types.SimpleNamespace(connid=connid,
                                      msg_total = sum(len(m) for m in messages),
                                      recv_total=0,
-                                     messages=list(messages),
+                                     messages=messages[connid], #list(messages),
                                      outb=b'')
         selector.register(sock, events, data=data)
+
+def send_message(message):
+    pass
+
+def parseAction(action):
+    if action in ['up','down','left','right']:
+        Messages.send_player_move(0,'M', action)
 
 def getInput():
     '''
@@ -108,12 +116,28 @@ def getInput():
     them into their sequence and relevance.
     Input messages from players whose turn it is not will be ignored
     '''
+    global isTurn
+    if not isTurn:
+        return
     global validInputs
     action = ''
     while action not in validInputs:
         action = input('please select an action (up, down, left, right, secret, accuse, suggest): ')
 
-        
+    parseAction
+
+    return action
+
+def update(action):
+    '''
+    Processing inputs and updates game state according to the rules
+    of the game.
+
+    For clients they will receive the master game state update message
+    and update their state accordingly
+    '''
+    #TODO: remove after demo
+    global players, updated
 
     events = selector.select(timeout=.1)
     #Host network code to accept player input messages
@@ -132,24 +156,8 @@ def getInput():
         if not selector.get_map():
             print('something probably broke')
 
-    return action
-
-
-
-
-def update(action):
-    '''
-    Processing inputs and updates game state according to the rules
-    of the game.
-
-    For clients they will receive the master game state update message
-    and update their state accordingly
-    '''
-    #TODO: remove after demo
-    global players
-    mainBoard.movePlayer(players[0], action)
-
-    mainBoard.updatePlayerLocationsOnBoard()
+    #mainBoard.movePlayer(players[0], action)
+    #mainBoard.updatePlayerLocationsOnBoard()
 
 def render():
     '''
@@ -158,6 +166,13 @@ def render():
 
     The host logic will disregard this function
     '''
+    global updated
+    if not updated:
+        return
+    if not gameStarted:
+        print('waiting for game to start...')
+        updated = False
+        return
     os.system('clear')
     mainBoard.draw()
     
