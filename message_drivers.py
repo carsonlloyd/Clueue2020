@@ -31,7 +31,6 @@ def send_player_positions(send_to_id, positions, debug_flag=False):
 
 	send_message(send_to_id, message, debug_flag)
 
-
 def send_success_connect(send_to_id, connected_client, failed_to_connect, is_game_full=False, debug_flag=False):
 	message = {	"message_type": "success_connect",
 				"connected_client": connected_client,
@@ -80,14 +79,17 @@ def send_card_set(send_to_id, cards, debug_flag=False):
 				}
 	send_message(send_to_id, message, debug_flag)
 
-def send_ready_for_turns(send_to_id, client_id, debug_flag=False):
-	message = {	"message_type": "ready_for_turns",
-				"client_id": client_id
+def send_ready_for_turn(send_to_id, debug_flag=False):
+	message = {	"message_type": "ready_for_turn",
 				}
 	send_message(send_to_id, message, debug_flag)
 
-def send_take_turn(send_to_id, debug_flag=False):
-	message = {	"message_type": "take_turn" }
+def send_take_turn(send_to_id, action, debug_flag=False):
+	'''
+	@suggest action is a DICTIONARY containing each action which may or may not include arguments for an action
+	'''
+	message = {	"message_type": "take_turn",
+				"action": action }
 	send_message(send_to_id, message, debug_flag)
 
 def send_end_turn(send_to_id, client_id, debug_flag=False):
@@ -96,17 +98,22 @@ def send_end_turn(send_to_id, client_id, debug_flag=False):
 				}
 	send_message(send_to_id, message, debug_flag)
 
-def send_player_move(send_to_id, client_id, direction, debug_flag=False):
+def send_player_move(send_to_id, player, direction, debug_flag=False):
 	message = {	"message_type": "player_move",
-				"client_id": client_id,
+				"player": player,
 				"direction": direction
 				}
 	send_message(send_to_id, message, debug_flag)
 
-def send_cannot_move(send_to_id, error_message, debug_flag=False):
-	message = {	"message_type": "cannot_move",
-				"error_message": error_message
+def send_update_player_pos(send_to_id, player, pos, debug_flag=False):
+	message = {	"message_type": "update_player_pos",
+				"player": player,
+				"pos": pos
 				}
+	send_message(send_to_id, message, debug_flag)
+
+def send_cannot_move(send_to_id, debug_flag=False):
+	message = {	"message_type": "cannot_move",}
 	send_message(send_to_id, message, debug_flag)
 
 def send_player_move_broadcast(send_to_id, client_id, direction, debug_flag=False):

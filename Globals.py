@@ -13,6 +13,7 @@ PORT = 65432
 server_socket = None
 selector = selectors.DefaultSelector()
 messages: Dict = {}
+turn = 0
 
 isTurn = False
 gameStarted = False

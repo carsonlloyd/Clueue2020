@@ -46,6 +46,9 @@ def initialize():
     #render()
 
 def determineOrder():
+    '''
+    Currently going to be the default connection order for demo purposes
+    '''
     pass
 
 def determineKnowledges():
@@ -78,18 +81,18 @@ def accept_wrapper(sock):
     #confirms character as well, currently. #TODO: character choices
     Message.send_player_connected(addr, str(players[len(playerAddresses)-1]))
     
+    #set up game.
     if len(playerAddresses) == numPlayers:
-        #for addr in playerAddresses.values():
-        #    Message.send_character_confirm(addr, {'player':str()})
+        #send initial positions
         sendAll(Message.send_player_positions, {'positions':{str(player):mainBoard.getPlayerRoom(player).getRoomType() for player in players}})
+        #determine turn order
         determineOrder()
         determineKnowledges()
-        sendAll(Message.send_start_game, {})
-        #set up game.
-        #determine turn order
-        #send initial positions
         #send game start message
+        sendAll(Message.send_start_game, {})
         #send first turn message
+        global turn
+        Message.send_ready_for_turn(playerAddresses[turn])
 
 def service_connection(key, mask):
     global messages
@@ -152,10 +155,21 @@ def setPositions(positions):
             mainBoard.rooms[value].addPlayer(players[count])
             count += 1
 
+def getPlayerBySymbol(char):
+    for player in players:
+        if char == str(player):
+            return player
+
+def incrementTurn():
+    global turn, numPlayers
+    turn += 1
+    turn %= numPlayers
+
 def parseMessage(jsonMessage):
     '''
     Receives message as bytes from the socket. Must be converted to a readable JSON format
     '''
+    global isTurn, gameStarted, updated, turn
     message = json.loads(jsonMessage)
     if message['message_type'] == 'player_connected':
         players[0].setName(message['connected_client'])
@@ -163,15 +177,37 @@ def parseMessage(jsonMessage):
     if message['message_type'] == 'player_positions' and not HOST:
         setPositions(message['positions'])
     if message['message_type'] == 'start_game':
-        global gameStarted, updated
         updated = True
         gameStarted = True
         print('game started')
-
+    if message['message_type'] == 'ready_for_turn':
+        isTurn = True
+    if message['message_type'] == 'player_move' and HOST:
+        player = getPlayerBySymbol(message['player'])
+        if mainBoard.movePlayer(player, message['direction']):
+            updated = True
+            sendAll(Message.send_update_player_pos, {'player':str(player), 'pos':mainBoard.getPlayerRoom(player).getRoomType()})
+        else:
+            #send failure message so they can resend turn
+            Message.send_cannot_move(playerAddresses[turn])
+    if message['message_type'] == 'cannot_move':
+        isTurn = True
+    if message['message_type'] == 'update_player_pos' and not HOST:
+        updated = True
+        player = getPlayerBySymbol(message['player'])
+        mainBoard.updatePlayerPos(player, message['pos'])
+        Message.send_end_turn((ADDR,PORT), str(player))
+    if message['message_type'] == 'end_turn' and HOST and message['client_id'] == str(players[turn]):
+        incrementTurn()
+        Message.send_ready_for_turn(playerAddresses[turn])
+        
 
 def parseAction(action):
     if action in ['up','down','left','right']:
-        Messages.send_player_move(0,'M', action)
+        Message.send_player_move((ADDR,PORT), str(players[0]), action)
+    elif action in ['suggest', 'accuse']:
+        pass
+        #do the other things
 
 def getInput():
     '''
@@ -188,7 +224,9 @@ def getInput():
     while action not in validInputs:
         action = input('please select an action (up, down, left, right, secret, accuse, suggest): ')
 
-    parseAction
+    isTurn = False
+    parseAction(action)
+
 
     return action
 
