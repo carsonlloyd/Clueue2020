@@ -1,6 +1,7 @@
 from Globals import *
 from Board import Board
 from Player import Player
+import Room
 import time, os, random, argparse, socket, selectors, types, json
 from typing import List, Dict
 import message_drivers as Message
@@ -20,8 +21,9 @@ def initNetwork():
 def initPlayers(numPlayers):
     global players
     players = [Player(playerNames[i]) for i in random.sample(range(6),numPlayers)]
-    for playerIdx,roomIdx in enumerate(random.sample(range(9),numPlayers)):
-        mainBoard.rooms[roomIdx].addPlayer(players[playerIdx]) #kinda bad encapsulation but thats pythons fault
+    if HOST:
+        for playerIdx,roomIdx in enumerate(random.sample(range(9),numPlayers)):
+            mainBoard.rooms[roomIdx].addPlayer(players[playerIdx]) #kinda bad encapsulation but thats pythons fault
 
 def initialize():
     '''
@@ -82,6 +84,7 @@ def accept_wrapper(sock):
         sendAll(Message.send_player_positions, {'positions':{str(player):mainBoard.getPlayerRoom(player).getRoomType() for player in players}})
         determineOrder()
         determineKnowledges()
+        sendAll(Message.send_start_game, {})
         #set up game.
         #determine turn order
         #send initial positions
@@ -105,7 +108,7 @@ def service_connection(key, mask):
             #sock.close()
     if mask & selectors.EVENT_WRITE:
         if messages[data.connid]:
-            data.outb = messages[data.connid].pop()
+            data.outb = messages[data.connid].pop(0)
             print('sending ', repr(data.outb), ' to ', data.connid)
             sent = sock.send(data.outb) # Should be ready to write
             data.outb = data.outb[sent:]
@@ -130,6 +133,25 @@ def start_connections(host, port, num_conns=1):
     messages[server_addr] = []
     selector.register(sock, events, data=data)
 
+def setPositions(positions):
+    '''
+    Takes a dictionary of player positions and places them in the correct places in a client game
+
+    @param positions Dictionary following the form Dict[char: int]
+    '''
+    global updated
+    updated = True
+    count = 1
+    for key, value in positions.items():
+        if key == str(players[0]):
+            print('adding myself (' + str(key) + ') to ' + str(Room.RoomType(value)))
+            mainBoard.rooms[value].addPlayer(players[0])
+        else:
+            print('adding ' + str(key) + ' to ' + str(Room.RoomType(value)))
+            players[count].setName(key)
+            mainBoard.rooms[value].addPlayer(players[count])
+            count += 1
+
 def parseMessage(jsonMessage):
     '''
     Receives message as bytes from the socket. Must be converted to a readable JSON format
@@ -138,6 +160,13 @@ def parseMessage(jsonMessage):
     if message['message_type'] == 'player_connected':
         players[0].setName(message['connected_client'])
         print('You will be playing as ' + message['connected_client'])
+    if message['message_type'] == 'player_positions' and not HOST:
+        setPositions(message['positions'])
+    if message['message_type'] == 'start_game':
+        global gameStarted, updated
+        updated = True
+        gameStarted = True
+        print('game started')
 
 
 def parseAction(action):
@@ -195,7 +224,7 @@ def update(action):
     #        print('something probably broke')
 
     #mainBoard.movePlayer(players[0], action)
-    #mainBoard.updatePlayerLocationsOnBoard()
+    mainBoard.updatePlayerLocationsOnBoard()
 
 def render():
     '''
@@ -204,7 +233,7 @@ def render():
 
     The host logic will disregard this function
     '''
-    global updated
+    global updated, gameStarted
     if not updated:
         return
     if not gameStarted:
@@ -213,6 +242,7 @@ def render():
         return
     os.system('clear')
     mainBoard.draw()
+    updated = False
     
 
 

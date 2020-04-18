@@ -50,6 +50,7 @@ class Board:
         '''
         updates the game board to properly display where the
         players currently are
+        Works by making a list of the characters symbols and then padding to the desired size
         #TODO: make this work for hallways as well
         '''
         spacer = '|          |'
