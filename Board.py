@@ -87,17 +87,23 @@ class Board:
         '''
         This function validates a move and is generally only used by the host
         '''
-        room = self.getPlayerRoom(player) #need to write this still
+        room = self.getPlayerRoom(player)
         global allowedMoves, roomAdjacencies
         print(room.getRoomType())
-        if action in Room.allowedMoves[room.getRoomType()]:
+        newRoomType = Room.roomAdjacencies[room.getRoomType()][action]
+        canMove = True
+
+        # move validation
+        if action not in Room.allowedMoves[room.getRoomType()]: # move is a valid direction?
+            canMove = False
+        if newRoomType > 10 and newRoomType.getPlayers(): # is the hallway already occupied?
+            canMove = False
+
+        # make move
+        if canMove:
             room.removePlayer(player)
-            newRoomType = Room.roomAdjacencies[room.getRoomType()][action]
-            for room in self.rooms:
-                if room.getRoomType() == newRoomType:
-                    room.addPlayer(player)
-                    break
+            newRoomType.addPlayer(player)
             return True
         else:
-            print("invalid move") # invalid move message - integrate with other messaging
+            print("invalid move") # invalid move message - real message sent in Main.py
             return False

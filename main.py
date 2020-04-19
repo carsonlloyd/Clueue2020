@@ -190,11 +190,14 @@ def parseMessage(jsonMessage):
         if mainBoard.movePlayer(player, message['direction']):
             updated = True
             sendAll(Message.send_update_player_pos, {'player':str(player), 'pos':mainBoard.getPlayerRoom(player).getRoomType()})
+
+            # TODO is this where MAKE_ACCUSATION would be sent to the client?
         else:
             #send failure message so they can resend turn
             Message.send_cannot_move(playerAddresses[turn])
-        # TODO is this where MAKE_ACCUSATION would be sent to the client?
     elif message_type == 'cannot_move':
+        # TODO show client message to player
+        # TODO request new move from player
         isTurn = True
     elif message_type == 'update_player_pos' and not HOST:
         updated = True
