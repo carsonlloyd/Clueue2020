@@ -171,20 +171,21 @@ def parseMessage(jsonMessage):
     Feel free to break out anything into functions, I'll probably do that later for most of this
     to make it look less gross
     '''
-    global isTurn, gameStarted, updated, turn
+    global isTurn, gameStarted, updated, turn, HOST
     message = json.loads(jsonMessage)
-    if message['message_type'] == 'player_connected':
+    message_type = message['message_type']
+    if message_type == 'player_connected':
         players[0].setName(message['connected_client'])
         print('You will be playing as ' + message['connected_client'])
-    elif message['message_type'] == 'player_positions' and not HOST:
+    elif message_type == 'player_positions' and not HOST:
         setPositions(message['positions'])
-    elif message['message_type'] == 'start_game':
+    elif message_type == 'start_game':
         updated = True
         gameStarted = True
         print('game started')
-    elif message['message_type'] == 'ready_for_turn':
+    elif message_type == 'ready_for_turn':
         isTurn = True
-    elif message['message_type'] == 'player_move' and HOST:
+    elif message_type == 'player_move' and HOST:
         player = getPlayerBySymbol(message['player'])
         if mainBoard.movePlayer(player, message['direction']):
             updated = True
@@ -192,14 +193,31 @@ def parseMessage(jsonMessage):
         else:
             #send failure message so they can resend turn
             Message.send_cannot_move(playerAddresses[turn])
-    elif message['message_type'] == 'cannot_move':
+        # TODO is this where MAKE_ACCUSATION would be sent to the client?
+    elif message_type == 'cannot_move':
         isTurn = True
-    elif message['message_type'] == 'update_player_pos' and not HOST:
+    elif message_type == 'update_player_pos' and not HOST:
         updated = True
         player = getPlayerBySymbol(message['player'])
         mainBoard.updatePlayerPos(player, message['pos'])
         Message.send_end_turn((ADDR,PORT), str(player))
-    elif message['message_type'] == 'end_turn' and HOST and message['client_id'] == str(players[turn]):
+    elif message_type == 'make_accusation':
+    	# TODO client make accusation
+    elif message_type == 'accusation_made':
+    	global correctSuspect, correctWeapon, correctRoom
+    	client = message['client_id']
+    	suspect = message['suspect']
+    	weapon = message['weapon']
+    	room = message['room']
+    	# confirm accusation is correct TODO: replace below with real game state information
+    	if suspect == correctSuspect and weapon == correctWeapon and room = correctRoom:
+    		Message.send_game_win_accusation(client, suspect, weapon, room)
+    		game_won = True
+    		# go on to display message to clients
+    	else:
+    		Message.send_false_accusation(client, suspect, weapon, room)
+    		# go on to display message to clients
+    elif message_type == 'end_turn' and HOST and message['client_id'] == str(players[turn]):
         incrementTurn()
         Message.send_ready_for_turn(playerAddresses[turn])
         
@@ -286,10 +304,13 @@ def main():
     '''
     initialize()
 
-    while True: #TODO: Change to while game not won
+    global game_won
+    while not game_won:
         action = getInput()
         update(action)
         render()
+
+    # game_won = True, what else? cleanup? TODO
 
     selector.close()
 

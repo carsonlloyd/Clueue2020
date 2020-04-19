@@ -18,3 +18,5 @@ turn = 0
 isTurn = False
 gameStarted = False
 updated = True
+
+game_won = False
