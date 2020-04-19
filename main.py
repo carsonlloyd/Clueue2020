@@ -201,9 +201,9 @@ def parseMessage(jsonMessage):
         player = getPlayerBySymbol(message['player'])
         mainBoard.updatePlayerPos(player, message['pos'])
         Message.send_end_turn((ADDR,PORT), str(player))
-    elif message_type == 'make_accusation':
+    elif message_type == 'make_accusation' and not HOST:
     	# TODO client make accusation
-    elif message_type == 'accusation_made':
+    elif message_type == 'accusation_made' and HOST:
     	global correctSuspect, correctWeapon, correctRoom
     	client = message['client_id']
     	suspect = message['suspect']
