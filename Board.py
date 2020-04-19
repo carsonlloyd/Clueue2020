@@ -50,6 +50,7 @@ class Board:
         '''
         updates the game board to properly display where the
         players currently are
+        Works by making a list of the characters symbols and then padding to the desired size
         #TODO: make this work for hallways as well
         '''
         spacer = '|          |'
@@ -71,7 +72,21 @@ class Board:
         print('ERROR: Player was in none of the rooms')
         exit()
 
+    def updatePlayerPos(self, player, room):
+        '''
+        This function simply puts the player in a new place without checking,
+        having assumed that the host checked before sending the message that
+        triggers this update
+        '''
+        curRoom = self.getPlayerRoom(player)
+        curRoom.removePlayer(player)
+        room = self.rooms[room]
+        room.addPlayer(player)
+
     def movePlayer(self, player, action):
+        '''
+        This function validates a move and is generally only used by the host
+        '''
         room = self.getPlayerRoom(player) #need to write this still
         global allowedMoves, roomAdjacencies
         print(room.getRoomType())
@@ -82,5 +97,7 @@ class Board:
                 if room.getRoomType() == newRoomType:
                     room.addPlayer(player)
                     break
+            return True
         else:
             print("invalid move") # invalid move message - integrate with other messaging
+            return False
