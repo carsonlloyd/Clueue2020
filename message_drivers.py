@@ -1,5 +1,5 @@
-import time, os, random
-# import json
+import time, os, random, json
+from main import addMessage
 
 # debug_flag true/false to allow for command-line printing (intend to have this be a program-wide global? can re-configure if needed)
 # ARGUMENT FORMAT: TO, [data], debug_flag
@@ -13,10 +13,23 @@ def send_message(send_to_id, message, debug_flag=False):
 		print(message)
 	# TODO: IMPLEMENT SENDING MESSAGE ONCE SOCKETS ARE CONFIGURED
 
-	if send_to_id == 'ALL_CLIENTS':
-		;;
-	elif ;;
+	#turn message into bytes to be sent and then pad it out to 1024 bytes
+	#WARNING: all messages must be 1024 bytes
+	messageBytes = json.dumps(message).encode()
+	messageBytes += b' ' * (256-len(messageBytes))
 
+	if send_to_id == 'ALL_CLIENTS':
+		for i,m in enumerate(main.messages):
+			addMessage(messageBytes, i)
+	else:
+		addMessage(messageBytes, send_to_id)
+
+def send_player_positions(send_to_id, positions, debug_flag=False):
+	message = {	"message_type": "player_positions",
+				"positions": positions,
+				}
+
+	send_message(send_to_id, message, debug_flag)
 
 def send_success_connect(send_to_id, connected_client, failed_to_connect, is_game_full=False, debug_flag=False):
 	message = {	"message_type": "success_connect",
@@ -50,7 +63,13 @@ def send_character_choice(send_to_id, character_choice, client_id, debug_flag=Fa
 				}
 	send_message(send_to_id, message, debug_flag)
 
-def send_start_game(send_to_id='ALL_CLIENTS', debug_flag=False):
+def send_character_confirm(send_to_id, character, debug_flag=False):
+	message = {	"message_type": "character_confirm",
+				"character": character,
+				}
+	send_message(send_to_id, message, debug_flag)
+
+def send_start_game(send_to_id, debug_flag=False):
 	message = {	"message_type": "start_game" }
 	send_message(send_to_id, message, debug_flag)
 
@@ -60,14 +79,17 @@ def send_card_set(send_to_id, cards, debug_flag=False):
 				}
 	send_message(send_to_id, message, debug_flag)
 
-def send_ready_for_turns(send_to_id, client_id, debug_flag=False):
-	message = {	"message_type": "ready_for_turns",
-				"client_id": client_id
+def send_ready_for_turn(send_to_id, debug_flag=False):
+	message = {	"message_type": "ready_for_turn",
 				}
 	send_message(send_to_id, message, debug_flag)
 
-def send_take_turn(send_to_id, debug_flag=False):
-	message = {	"message_type": "take_turn" }
+def send_take_turn(send_to_id, action, debug_flag=False):
+	'''
+	@suggest action is a DICTIONARY containing each action which may or may not include arguments for an action
+	'''
+	message = {	"message_type": "take_turn",
+				"action": action }
 	send_message(send_to_id, message, debug_flag)
 
 def send_end_turn(send_to_id, client_id, debug_flag=False):
@@ -76,20 +98,25 @@ def send_end_turn(send_to_id, client_id, debug_flag=False):
 				}
 	send_message(send_to_id, message, debug_flag)
 
-def send_player_move(send_to_id, client_id, direction, debug_flag=False):
+def send_player_move(send_to_id, player, direction, debug_flag=False):
 	message = {	"message_type": "player_move",
-				"client_id": client_id,
+				"player": player,
 				"direction": direction
 				}
 	send_message(send_to_id, message, debug_flag)
 
-def send_cannot_move(send_to_id, error_message, debug_flag=False):
-	message = {	"message_type": "cannot_move",
-				"error_message": error_message
+def send_update_player_pos(send_to_id, player, pos, debug_flag=False):
+	message = {	"message_type": "update_player_pos",
+				"player": player,
+				"pos": pos
 				}
 	send_message(send_to_id, message, debug_flag)
 
-def send_player_move_broadcast(send_to_id='ALL_CLIENTS', client_id, direction, debug_flag=False):
+def send_cannot_move(send_to_id, debug_flag=False):
+	message = {	"message_type": "cannot_move",}
+	send_message(send_to_id, message, debug_flag)
+
+def send_player_move_broadcast(send_to_id, client_id, direction, debug_flag=False):
 	message = {	"message_type": "player_move_broadcast",
 				"client_id": client_id,
 				"direction": direction
@@ -134,7 +161,7 @@ def send_accusation(send_to_id, client_id, suspect, weapon, room, debug_flag=Fal
 				}
 	send_message(send_to_id, message, debug_flag)
 
-def send_accusation_made(send_to_id='ALL_CLIENTS', client_id, suspect, weapon, room, debug_flag=False):
+def send_accusation_made(send_to_id, client_id, suspect, weapon, room, debug_flag=False):
 	message = {	"message_type": "accusation_made",
 				"client_id": client_id,
 				"suspect": suspect,
@@ -143,7 +170,7 @@ def send_accusation_made(send_to_id='ALL_CLIENTS', client_id, suspect, weapon, r
 				}
 	send_message(send_to_id, message, debug_flag)
 
-def send_game_win_accusation(send_to_id='ALL_CLIENTS', client_id, suspect, weapon, room, debug_flag=False):
+def send_game_win_accusation(send_to_id, client_id, suspect, weapon, room, debug_flag=False):
 	message = {	"message_type": "game_win_accusation",
 				"client_id": client_id,
 				"suspect": suspect,
@@ -177,7 +204,7 @@ def send_disprove_made(send_to_id, client_id, suspect, weapon, room, debug_flag=
 				}
 	send_message(send_to_id, message, debug_flag)
 
-def send_disprove_done(send_to_id='ALL_CLIENTS', client_id_accuse, client_id_disprove, suspect, weapon, room, debug_flag=False):
+def send_disprove_done(send_to_id, client_id_accuse, client_id_disprove, suspect, weapon, room, debug_flag=False):
 	message = {	"message_type": "disprove_done",
 				"client_id_accuse": client_id_accuse,
 				"client_id_disprove": client_id_disprove,
