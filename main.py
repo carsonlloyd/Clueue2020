@@ -211,11 +211,11 @@ def parseMessage(jsonMessage):
     	room = message['room']
     	# confirm accusation is correct TODO: replace below with real game state information
     	if suspect == correctSuspect and weapon == correctWeapon and room = correctRoom:
-    		Message.send_game_win_accusation('ALL_CLIENTS', client, suspect, weapon, room)
+    		Message.send_game_win_accusation('ALL_CLIENTS', client, suspect, weapon, room) # should I change this to a sendAll() call?
     		game_won = True
     		# go on to display message to clients
     	else:
-    		Message.send_false_accusation('ALL_CLIENTS', client, suspect, weapon, room)
+    		Message.send_false_accusation('ALL_CLIENTS', client, suspect, weapon, room) # should I change this to a sendAll() call?
     		# go on to display message to clients
     elif message_type == 'end_turn' and HOST and message['client_id'] == str(players[turn]):
         incrementTurn()
