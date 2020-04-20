@@ -189,7 +189,7 @@ def parseMessage(jsonMessage):
         player = getPlayerBySymbol(message['player'])
         if mainBoard.movePlayer(player, message['direction']):
             updated = True
-            sendAll(Message.send_update_player_pos, {'player':str(player), 'pos':mainBoard.getPlayerRoom(player).getRoomType()}) # should we put these types of messages inside the movePlayer and updatePlayerPos functions?
+            sendAll(Message.send_update_player_pos, {'player':str(player), 'pos':mainBoard.getPlayerRoom(player).getRoomType()}) 
 
             # TODO is this where make_suggestion would be sent to the client?
             if mainBoard.getPlayerRoom(player).getRoomType() < 10:
