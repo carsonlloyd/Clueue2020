@@ -203,6 +203,7 @@ def parseMessage(jsonMessage):
         Message.send_end_turn((ADDR,PORT), str(player))
     elif message_type == 'make_accusation' and not HOST:
     	# TODO client make accusation
+        print('need TODO')
     elif message_type == 'accusation_made' and HOST:
     	global correctSuspect, correctWeapon, correctRoom
     	client = message['client_id']
@@ -210,7 +211,7 @@ def parseMessage(jsonMessage):
     	weapon = message['weapon']
     	room = message['room']
     	# confirm accusation is correct TODO: replace below with real game state information
-    	if suspect == correctSuspect and weapon == correctWeapon and room = correctRoom:
+    	if suspect == correctSuspect and weapon == correctWeapon and room == correctRoom:
     		Message.send_game_win_accusation('ALL_CLIENTS', client, suspect, weapon, room) # should I change this to a sendAll() call?
     		game_won = True
     		# go on to display message to clients
