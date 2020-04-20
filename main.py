@@ -189,9 +189,13 @@ def parseMessage(jsonMessage):
         player = getPlayerBySymbol(message['player'])
         if mainBoard.movePlayer(player, message['direction']):
             updated = True
-            sendAll(Message.send_update_player_pos, {'player':str(player), 'pos':mainBoard.getPlayerRoom(player).getRoomType()})
+            sendAll(Message.send_update_player_pos, {'player':str(player), 'pos':mainBoard.getPlayerRoom(player).getRoomType()}) # should we put these types of messages inside the movePlayer and updatePlayerPos functions?
 
-            # TODO is this where MAKE_ACCUSATION would be sent to the client?
+            # TODO is this where make_suggestion would be sent to the client?
+            if mainBoard.getPlayerRoom(player).getRoomType() < 10:
+                available_suspects = [p.name for p in players]
+                available_weapons = Weapon.weapons # depends on weapon class being created TODO
+                Message.send_make_suggestion(playerAddresses[turn], available_suspects, available_weapons)
         else:
             #send failure message so they can resend turn
             Message.send_cannot_move(playerAddresses[turn])
@@ -204,8 +208,35 @@ def parseMessage(jsonMessage):
         player = getPlayerBySymbol(message['player'])
         mainBoard.updatePlayerPos(player, message['pos'])
         Message.send_end_turn((ADDR,PORT), str(player))
+    elif message_type == 'make_suggestion':
+        available_suspects = message['suspects']
+        available_weapons = message['weapons']
+        # TODO present gui for player to make suggestion
+        #suspect,weapon = suggestion details from player
+        Message.send_suggestion((ADDR,PORT), suspect, weapon) # this is for sending to host server right?
+    elif message_type == 'suggestion':
+        # receive suggestion from client
+        client = message['client_id']
+        suspect = message['suspect']
+        weapon = message['weapon']
+        room = mainBoard.getPlayerRoom(player) # or should we use mainBoard.getPlayerRoom(player).getRoomType()
+        # move suspect and weapon to this room
+        mainBoard.updatePlayerPos(getPlayerBySymbol(suspect), room)
+        # TODO update boards OR depending on decision above, this send_update_player_pos will be in the Board class under the two move functions
+
+        # start round of disproves
+        for p in players[~player]: # should this be in a certain order, other than player-list-order?
+            Message.send_make_disprove(playerAddresses[p], client, suspect, weapon, room)
+            # TODO all disprove logic
+
+    elif message_type == 'cannot_suggest':
+        pass #TODO - not sure this is actually needed?
     elif message_type == 'make_accusation' and not HOST:
-    	# TODO client make accusation
+    	# TODO curate list of available suspects, weapons, and rooms
+        available_suspects = [player.name for player in players]
+        available_weapons = Weapon.weapons # depends on weapon class being created TODO
+        available_rooms = rooms # should this be only occupied rooms?
+        Message.send_make_accusation(playerAddresses[turn], available_suspects, available_weapons, available_rooms)
     elif message_type == 'accusation_made' and HOST:
     	global correctSuspect, correctWeapon, correctRoom
     	client = message['client_id']
