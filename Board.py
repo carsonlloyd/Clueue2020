@@ -53,7 +53,7 @@ class Board:
         Works by making a list of the characters symbols and then padding to the desired size
         #TODO: make this work for hallways as well
         '''
-        spacer = '|          |'
+        spacer = '|'
         for i in range(3):
             idx = 2 + 8*i
             self.board[idx] = '|'
@@ -63,6 +63,32 @@ class Board:
                     playerString += str(player) + ' '
                 self.board[idx] += str.center(playerString,12)
                 self.board[idx] += spacer
+                if (j<2):
+                    playerString = ' '
+                    for player in self.rooms[5*i+10+j].getPlayers():
+                        playerString += str(player) + ' '
+                    self.board[idx] += str.center(playerString,10)
+                    self.board[idx] += spacer
+            self.board[idx] += '\n'
+
+        spacer = '|                     |'
+        for i in range(2):
+            idx = 6 + 8*i
+            self.board[idx] = '      |'
+            for j in range(3):
+                playerString = ''
+                playerInHallway = False
+                for player in self.rooms[5*i+12+j].getPlayers():
+                    playerString += str(player)
+                    playerInHallway = True
+                if (playerInHallway):
+                    self.board[idx] += playerString
+                else:
+                    self.board[idx] += ' '
+                if(j<2):
+                    self.board[idx] += spacer
+                else:
+                    self.board[idx] += '|'
             self.board[idx] += '\n'
 
     def getPlayerRoom(self, player):
@@ -88,16 +114,20 @@ class Board:
         This function validates a move and is generally only used by the host
         '''
         room = self.getPlayerRoom(player) #need to write this still
+        roomTemp = room
         global allowedMoves, roomAdjacencies
         print(room.getRoomType())
         if action in Room.allowedMoves[room.getRoomType()]:
-            room.removePlayer(player)
             newRoomType = Room.roomAdjacencies[room.getRoomType()][action]
             for room in self.rooms:
                 if room.getRoomType() == newRoomType:
-                    room.addPlayer(player)
-                    break
-            return True
+                    if(newRoomType>=10) and (room.getPlayers() != []) :
+                        print("invalid move")
+                        return False
+                    else:
+                        room.addPlayer(player)
+                        roomTemp.removePlayer(player)                                 
+                        return True
         else:
             print("invalid move") # invalid move message - integrate with other messaging
             return False
