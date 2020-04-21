@@ -240,7 +240,7 @@ def parseMessage(jsonMessage):
         client = message['client_id']
         suspect = message['suspect']
         weapon = message['weapon']
-        room = mainBoard.getPlayerRoom(players[turn])
+        room = mainBoard.getPlayerRoom(player)
         
         # move suspect and weapon to this room
         player2 = getPlayerBySymbol(suspect)
@@ -304,7 +304,7 @@ def parseMessage(jsonMessage):
         suspect = available_suspects[0] # DEFAULTING FOR NOW
         weapon = available_weapons[0]
         room = available_rooms[0]
-        Message.send_accusation_made((ADDR,PORT), str(players[turn]), suspect, weapon, room)
+        Message.send_accusation_made((ADDR,PORT), player, suspect, weapon, room)
     elif message_type == 'accusation_made' and HOST:
         global case_file
         client = message['client_id']
