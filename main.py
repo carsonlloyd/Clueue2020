@@ -304,11 +304,11 @@ def parseMessage(jsonMessage):
         # confirm accusation is correct
         case_file = Cards.getCaseFile()
         if suspect == case_file['suspect'] and weapon == case_file['weapon'] and room == case_file['room']:
-            Message.send_game_win_accusation('ALL_CLIENTS', client, suspect, weapon, room) # should I change this to a sendAll() call?
+            sendAll(Message.send_game_win_accusation, {'client':client, 'suspect':suspect, 'weapon':weapon, 'room':room})
             game_won = True
             # go on to display message to clients
         else:
-            Message.send_false_accusation('ALL_CLIENTS', client, suspect, weapon, room) # should I change this to a sendAll() call?
+            sendAll(Message.send_false_accusation, {'client':client, 'suspect':suspect, 'weapon':weapon, 'room':room})
             # go on to display message to clients
     elif message_type == 'end_turn' and HOST and message['client_id'] == str(players[turn]):
         incrementTurn()
