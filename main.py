@@ -224,6 +224,8 @@ def parseMessage(jsonMessage):
         available_weapons = message['weapons']
         # TODO present gui for player to make suggestion
         # suspect,weapon = suggestion details from player
+        suspect = available_suspects[0] # HARDCODED FOR NOW
+        weapon = available_weapons[0] # HARDCODED FOR NOW
         Message.send_suggestion((ADDR,PORT), suspect, weapon) # this is for sending to host server right?
     elif message_type == 'suggestion':
         # receive suggestion from client
@@ -240,16 +242,14 @@ def parseMessage(jsonMessage):
         mainBoard.updatePlayerPos(player2, room)
         sendAll(Message.send_update_player_pos, {'player':str(player2), 'pos':room})
 
-        # TODO - disproves will be done automatically by server ***
+        # disproves will be done automatically by server ***
         done_disprove = False
         disproved = False
         d_card = None
         for p in players[~player]:
             for card in p.getHand():
-                # if card matches suggestion, show one to current player, and exit loop
-                # TODO technically if more than one matches, the player disproving should be allowed to choose the card to show
+                # if more than one matches, the player disproving should be allowed to choose the card to show
                 # need to add back and forth messaging and client prompts:
-
                 matches = []
                 if card == suspect: # TODO check types
                     matches.append(card)
@@ -257,6 +257,7 @@ def parseMessage(jsonMessage):
                     matches.append(card)
                 elif card == room: # TODO check types
                     matches.append(card)
+
             if matches:
                 # server send info to suggesting-player
                 Message.send_make_disprove(playerAddresses(p), player, matches)
@@ -274,7 +275,8 @@ def parseMessage(jsonMessage):
             # allow accusation
             available_suspects = [p.name for p in players if p != player] # remove current player
             available_weapons = mainBoard.getWeapons()
-            Message.send_make_accusation(playerAddresses[turn], available_suspects, available_weapons)
+            available_rooms = [r.getRoomType() for r in mainBoard.getRooms() if r.getPlayers()] # list rooms, from board's rooms if room has player(s)
+            Message.send_make_accusation(playerAddresses[turn], available_suspects, available_weapons, available_rooms)
 
     elif message_type == 'cannot_suggest':
         pass #TODO
@@ -287,16 +289,16 @@ def parseMessage(jsonMessage):
         # show player the card chosen to disprove them
         pass
     elif message_type == 'make_accusation' and not HOST:
-        available_suspects = [player.name for player in players]
-        available_weapons = mainBoard.getWeapons()
-        available_rooms = [r.getRoomType() for r in mainBoard.getRooms() if r.getPlayers()] # list rooms, from board's rooms if room has player(s)
+        available_suspects = message['suspects']
+        available_weapons = message['weapons']
+        available_rooms = message['rooms']
         # TODO allow player to choose
         suspect = available_suspects[0] # DEFAULTING FOR NOW
         weapon = available_weapons[0]
         room = available_rooms[0]
-        Message.send_accusation_made((ADDR,PORT), suspect, weapon, room)
+        Message.send_accusation_made((ADDR,PORT), player, suspect, weapon, room)
     elif message_type == 'accusation_made' and HOST:
-        global correctSuspect, correctWeapon, correctRoom
+        global case_file
         client = message['client_id']
         suspect = message['suspect']
         weapon = message['weapon']
