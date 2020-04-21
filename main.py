@@ -206,6 +206,7 @@ def parseMessage(jsonMessage):
         Message.send_end_turn((ADDR,PORT), str(player))
     elif message_type == 'make_accusation' and not HOST:
     	# TODO client make accusation
+        pass
     elif message_type == 'accusation_made' and HOST:
     	global correctSuspect, correctWeapon, correctRoom
     	client = message['client_id']
