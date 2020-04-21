@@ -141,7 +141,7 @@ class Board:
         '''
         return self.weapons
 
-    def getRooms(self)
+    def getRooms(self):
         '''
         This function just returns a list of all rooms held by the Board instance.
         '''
