@@ -116,7 +116,7 @@ def send_cannot_move(send_to_id, debug_flag=False):
 	message = {	"message_type": "cannot_move",}
 	send_message(send_to_id, message, debug_flag)
 
-def send_player_move_broadcast(send_to_id, client_id, direction, debug_flag=False):
+def send_player_move_broadcast(send_to_id, client_id, direction, debug_flag=False): #may not be needed - see send_update_player_pos
 	message = {	"message_type": "player_move_broadcast",
 				"client_id": client_id,
 				"direction": direction
