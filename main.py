@@ -296,20 +296,20 @@ def parseMessage(jsonMessage):
         room = available_rooms[0]
         Message.send_accusation_made((ADDR,PORT), suspect, weapon, room)
     elif message_type == 'accusation_made' and HOST:
-    	global correctSuspect, correctWeapon, correctRoom
-    	client = message['client_id']
-    	suspect = message['suspect']
-    	weapon = message['weapon']
-    	room = message['room']
-    	# confirm accusation is correct
+        global correctSuspect, correctWeapon, correctRoom
+        client = message['client_id']
+        suspect = message['suspect']
+        weapon = message['weapon']
+        room = message['room']
+        # confirm accusation is correct
         case_file = Cards.getCaseFile()
-    	if suspect == case_file['suspect'] and weapon == case_file['weapon'] and room == case_file['room']:
-    		Message.send_game_win_accusation('ALL_CLIENTS', client, suspect, weapon, room) # should I change this to a sendAll() call?
-    		game_won = True
-    		# go on to display message to clients
-    	else:
-    		Message.send_false_accusation('ALL_CLIENTS', client, suspect, weapon, room) # should I change this to a sendAll() call?
-    		# go on to display message to clients
+        if suspect == case_file['suspect'] and weapon == case_file['weapon'] and room == case_file['room']:
+            Message.send_game_win_accusation('ALL_CLIENTS', client, suspect, weapon, room) # should I change this to a sendAll() call?
+            game_won = True
+            # go on to display message to clients
+        else:
+            Message.send_false_accusation('ALL_CLIENTS', client, suspect, weapon, room) # should I change this to a sendAll() call?
+            # go on to display message to clients
     elif message_type == 'end_turn' and HOST and message['client_id'] == str(players[turn]):
         incrementTurn()
         Message.send_ready_for_turn(playerAddresses[turn])
