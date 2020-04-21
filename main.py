@@ -145,7 +145,6 @@ def determineOrder():
 def determineKnowledges():
     pass
 
-
 def setPositions(positions):
     '''
     Takes a dictionary of player positions and places them in the correct places in a client game
@@ -203,7 +202,7 @@ def parseMessage(jsonMessage):
             sendAll(Message.send_update_player_pos, {'player':str(player), 'pos':mainBoard.getPlayerRoom(player).getRoomType()}) 
 
             # is this where make_suggestion would be sent to the client?
-            if mainBoard.getPlayerRoom(player).getRoomType() < 10:
+            if mainBoard.getPlayerRoom(player).getRoomType() < Room.RoomType.MAX_ROOM:
                 available_suspects = [p.name for p in players]
                 available_weapons = mainBoard.getWeapons()
                 Message.send_make_suggestion(playerAddresses[turn], available_suspects, available_weapons)
