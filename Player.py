@@ -40,6 +40,9 @@ class Player():
         elif char == 'W':
             self.name = 'Mrs. White'
 
+    def setHand(self, cards):
+        self.hand = cards
+
     def getHand(self, hand):
-        return str(self.hand)
+        return self.hand
 
