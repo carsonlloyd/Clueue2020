@@ -35,6 +35,8 @@ class Cards():
         for i in range(21):
             allcards.append(i)
         self.deck = allcards
+        self.case_file = None
+        self.hands = None
     
     def CaseFile(self):
         roomnum = randint(0,8)

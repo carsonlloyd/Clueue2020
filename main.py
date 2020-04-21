@@ -241,11 +241,17 @@ def parseMessage(jsonMessage):
         sendAll(Message.send_update_player_pos, {'player':str(player2), 'pos':room})
 
         # TODO - disproves will be done automatically by server ***
-        # for p in players[~player]:
-            # TODO need cards to be in Player's hand to do disproves
-            # for cards in p's hand
+        for p in players[~player]:
+            for card in p.getHand():
                 # if card matches suggestion, show one to current player, and exit loop
-                # else, continue
+                if card == suspect: # TODO check types
+                    pass # TODO show card to player (send disprove message back to player client)
+                elif card == weapon: # TODO check types
+                    pass # TODO show card to player (send disprove message back to player client)
+                elif card == room: # TODO check types
+                    pass # TODO show card to player (send disprove message back to player client)
+                else:
+                    pass
             # if we fall through to here, no suggestions (either send message or just continue?)
         # end suggestion and disproves
 
