@@ -129,7 +129,7 @@ class Board:
         
         if canMove:
             newRoom.addPlayer(player)
-            oldRoom.removePlayer(player)                                 
+            oldRoom.removePlayer(player)
             return True
         else:
             print("invalid move") # invalid move message - real message sent in Main.py

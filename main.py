@@ -241,7 +241,7 @@ def parseMessage(jsonMessage):
 
         # TODO - disproves will be done automatically by server ***
     elif message_type == 'cannot_suggest':
-        pass #TODO - not sure this is actually needed?
+        pass #TODO
     elif message_type == 'make_accusation' and not HOST:
         available_suspects = [player.name for player in players]
         available_weapons = mainBoard.getWeapons()
