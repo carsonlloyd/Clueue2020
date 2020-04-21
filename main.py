@@ -229,7 +229,7 @@ def parseMessage(jsonMessage):
             input_val = input(string)
             if input_val in available_suspects:
                 suspect = input_val
-        while weapon = None
+        while weapon == None:
             string = "Choose a weapon (" + available_weapons + "): "
             input_val = input(string)
             if input_val in available_weapons:
