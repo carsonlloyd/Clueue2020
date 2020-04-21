@@ -118,7 +118,6 @@ class Board:
         oldRoom = self.getPlayerRoom(player)
         global allowedMoves, roomAdjacencies
         print(oldRoom.getRoomType())
-        newRoom = Room.roomAdjacencies[oldRoom.getRoomType()][action]
         
         canMove = True
         # move validation
@@ -128,6 +127,7 @@ class Board:
             canMove = False
         
         if canMove:
+            newRoom = Room.roomAdjacencies[oldRoom.getRoomType()][action]
             newRoom.addPlayer(player)
             oldRoom.removePlayer(player)
             return True
