@@ -120,11 +120,11 @@ class Board:
         print(oldRoom.getRoomType())
         
         canMove = True
-        newRoom = None
+        newRoom = None # scope this
         # move validation
         if action not in Room.allowedMoves[oldRoom.getRoomType()]: # move is a valid direction?
             canMove = False
-        else:
+        else: # if it is valid direction
             newRoom = Room.roomAdjacencies[oldRoom.getRoomType()][action]
             if newRoom > 10 and newRoom.getPlayers(): # is the hallway already occupied?
                 canMove = False
