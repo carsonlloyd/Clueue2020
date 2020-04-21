@@ -8,6 +8,8 @@ class Board:
         self.rooms = [Room.Room(roomType) for roomType in Room.RoomType]
         self.board = []
 
+        self.weapons = [w.value for w in Room.WeaponType]
+
         self.room_empty =    '|            |----------|            |----------|            |\n'
         self.room_r1 = '|    Study   |----------|    Hall    |----------|   Lounge   |\n'
         self.room_r2 = '|   Library  |----------|  Billiard  |----------|   Dining   |\n'
@@ -133,3 +135,9 @@ class Board:
         else:
             print("invalid move") # invalid move message - real message sent in Main.py
             return False
+
+    def getWeapons(self):
+        '''
+        This function just returns a list of all weapons held by the Board instance.
+        '''
+        return self.weapons

@@ -201,10 +201,10 @@ def parseMessage(jsonMessage):
             updated = True
             sendAll(Message.send_update_player_pos, {'player':str(player), 'pos':mainBoard.getPlayerRoom(player).getRoomType()}) 
 
-            # TODO is this where make_suggestion would be sent to the client?
+            # is this where make_suggestion would be sent to the client?
             if mainBoard.getPlayerRoom(player).getRoomType() < 10:
                 available_suspects = [p.name for p in players]
-                available_weapons = Weapon.weapons # depends on weapon class being created TODO
+                available_weapons = mainBoard.getWeapons()
                 Message.send_make_suggestion(playerAddresses[turn], available_suspects, available_weapons)
         else:
             #send failure message so they can resend turn
@@ -222,7 +222,7 @@ def parseMessage(jsonMessage):
         available_suspects = message['suspects']
         available_weapons = message['weapons']
         # TODO present gui for player to make suggestion
-        #suspect,weapon = suggestion details from player
+        # suspect,weapon = suggestion details from player
         Message.send_suggestion((ADDR,PORT), suspect, weapon) # this is for sending to host server right?
     elif message_type == 'suggestion':
         # receive suggestion from client
@@ -233,19 +233,15 @@ def parseMessage(jsonMessage):
         # move suspect and weapon to this room
         mainBoard.updatePlayerPos(getPlayerBySymbol(suspect), room)
         # TODO update boards OR depending on decision above, this send_update_player_pos will be in the Board class under the two move functions
+        sendAll(Message.send_update_player_pos, {'player':str(player), 'pos':mainBoard.getPlayerRoom(player)})
 
-        # start round of disproves
-        for p in players[~player]: # should this be in a certain order, other than player-list-order?
-            Message.send_make_disprove(playerAddresses[p], client, suspect, weapon, room)
-            # TODO all disprove logic
-
+        # TODO - disproves will be done automatically by server
     elif message_type == 'cannot_suggest':
         pass #TODO - not sure this is actually needed?
     elif message_type == 'make_accusation' and not HOST:
-        # TODO curate list of available suspects, weapons, and rooms
         available_suspects = [player.name for player in players]
-        available_weapons = Weapon.weapons # depends on weapon class being created TODO
-        available_rooms = rooms # should this be only occupied rooms?
+        available_weapons = mainBoard.getWeapons()
+        available_rooms = rooms # should this be only occupied rooms? TODO
         Message.send_make_accusation(playerAddresses[turn], available_suspects, available_weapons, available_rooms)
     elif message_type == 'accusation_made' and HOST:
     	global correctSuspect, correctWeapon, correctRoom
