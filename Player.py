@@ -4,6 +4,7 @@ class Player():
         self.location = None
         self.name = name
         self.addr = None
+        self.hand = None
 
     def __str__(self):
         if self.name == 'Col. Mustard':
@@ -39,4 +40,6 @@ class Player():
         elif char == 'W':
             self.name = 'Mrs. White'
 
+    def getHand(self, hand):
+        return str(self.hand)
 
