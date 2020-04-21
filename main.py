@@ -225,7 +225,7 @@ def parseMessage(jsonMessage):
         # suspect,weapon = suggestion details from player
         suspect = available_suspects[0] # HARDCODED FOR NOW
         weapon = available_weapons[0] # HARDCODED FOR NOW
-        Message.send_suggestion((ADDR,PORT), suspect, weapon) # this is for sending to host server right?
+        Message.send_suggestion((ADDR,PORT), player, suspect, weapon) # this is for sending to host server right?
     elif message_type == 'suggestion':
         # receive suggestion from client
         client = message['client_id']
