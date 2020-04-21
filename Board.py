@@ -125,8 +125,8 @@ class Board:
         if action not in Room.allowedMoves[oldRoom.getRoomType()]: # move is a valid direction?
             canMove = False
         else: # if it is valid direction
-            newRoom = Room.roomAdjacencies[oldRoom.getRoomType()][action]
-            if newRoom > 10 and newRoom.getPlayers(): # is the hallway already occupied?
+            newRoom = self.rooms[Room.roomAdjacencies[oldRoom.getRoomType()][action]] #lol kinda disgusting but whatever
+            if newRoom.getRoomType() > 10 and newRoom.getPlayers(): # is the hallway already occupied?
                 canMove = False
         
         if canMove:

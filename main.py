@@ -318,7 +318,7 @@ def parseMessage(jsonMessage):
         
 
 def parseAction(action):
-    if action in ['up','down','left','right']:
+    if action in ['up','down','left','right','secret']:
         Message.send_player_move((ADDR,PORT), str(players[0]), action)
     elif action in ['suggest', 'accuse']:
         pass
