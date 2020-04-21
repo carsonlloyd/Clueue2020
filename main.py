@@ -64,7 +64,8 @@ def accept_wrapper(sock):
         #send game start message
         sendAll(Message.send_start_game, {})
         for i in range(numPlayers):
-            Message.send_card_set(playerAddresses[i], hands[i])
+            players[i].setHand(hands[i])
+            Message.send_card_set(playerAddresses[i], players[i].hand)
         #send first turn message
         global turn
         Message.send_ready_for_turn(playerAddresses[turn])
