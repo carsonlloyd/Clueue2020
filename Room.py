@@ -1,6 +1,15 @@
 import Player
 from enum import IntEnum
 
+class WeaponType(IntEnum):
+    #Weapons
+    ROPE = 0
+    LEAD_PIPE = 1
+    KNIFE = 2
+    WRENCH = 3
+    CANDLESTICK = 4
+    REVOLVER = 5
+    MAX_WEAPON = 6
 
 class RoomType(IntEnum):
     #ROOMS
@@ -18,22 +27,22 @@ class RoomType(IntEnum):
     #HALLWAYS
     H_STUDY_HALL = 10
     H_HALL_STUDY = 10
-    H_STUDY_LIBRARY = 11
-    H_LIBRARY_STUDY = 11
-    H_HALL_LOUNGE = 12
-    H_LOUNGE_HALL = 12
+    H_HALL_LOUNGE = 11
+    H_LOUNGE_HALL = 11
+    H_STUDY_LIBRARY = 12
+    H_LIBRARY_STUDY = 12
     H_HALL_BILLIARD_ROOM = 13
     H_BILLIARD_ROOM_HALL = 13
     H_LOUNGE_DINING_ROOM = 14
     H_DINING_ROOM_LOUNGE = 14
     H_LIBRARY_BILLIARD_ROOM = 15
     H_BILLIARD_ROOM_LIBRARY = 15
-    H_LIBRARY_CONSERVATORY = 16
-    H_CONSERVATORY_LIBRARY = 16
-    H_BILLIARD_ROOM_BALL_ROOM = 17
-    H_BALL_ROOM_BILLIARD_ROOM = 17
-    H_BILLIARD_ROOM_DINING_ROOM = 18
-    H_DINING_ROOM_BILLIARD_ROOM = 18
+    H_BILLIARD_ROOM_DINING_ROOM = 16
+    H_DINING_ROOM_BILLIARD_ROOM = 16
+    H_LIBRARY_CONSERVATORY = 17
+    H_CONSERVATORY_LIBRARY = 17
+    H_BILLIARD_ROOM_BALL_ROOM = 18
+    H_BALL_ROOM_BILLIARD_ROOM = 18
     H_DINING_ROOM_KITCHEN = 19
     H_KITCHEN_DINING_ROOM = 19
     H_CONSERVATORY_BALL_ROOM = 20
@@ -55,17 +64,18 @@ roomAdjacencies = {
 
     #HALLWAYS
     10: {'left': RoomType.STUDY, 'right': RoomType.HALL },
-    11: {'up': RoomType.STUDY, 'down': RoomType.LIBRARY },
-    12: {'right': RoomType.LOUNGE, 'left': RoomType.HALL },
+    11: {'right': RoomType.LOUNGE, 'left': RoomType.HALL },
+    12: {'up': RoomType.STUDY, 'down': RoomType.LIBRARY },
     13: {'up': RoomType.HALL, 'down': RoomType.BILLIARD_ROOM },
     14: {'up': RoomType.LOUNGE, 'down': RoomType.DINING_ROOM },
     15: {'left': RoomType.LIBRARY, 'right': RoomType.BILLIARD_ROOM },
-    16: {'up': RoomType.LIBRARY, 'down': RoomType.CONSERVATORY },
-    17: {'up': RoomType.BILLIARD_ROOM, 'down': RoomType.BALL_ROOM },
-    18: {'left': RoomType.BILLIARD_ROOM, 'right': RoomType.DINING_ROOM },
+    16: {'left': RoomType.BILLIARD_ROOM, 'right': RoomType.DINING_ROOM },
+    17: {'up': RoomType.LIBRARY, 'down': RoomType.CONSERVATORY },
+    18: {'up': RoomType.BILLIARD_ROOM, 'down': RoomType.BALL_ROOM },
     19: {'up': RoomType.DINING_ROOM, 'down': RoomType.KITCHEN },
     20: {'left': RoomType.CONSERVATORY, 'right': RoomType.BALL_ROOM },
     21: {'left': RoomType.BALL_ROOM, 'right': RoomType.KITCHEN}
+       
 }
 
 allowedMoves = {
@@ -82,14 +92,14 @@ allowedMoves = {
 
     #HALLWAYS
     10: ['left', 'right'],
-    11: ['up', 'down'],
-    12: ['left', 'right'],
+    11: ['left', 'right'],
+    12: ['up', 'down'],
     13: ['up', 'down'],
     14: ['up', 'down'],
     15: ['left', 'right'],
-    16: ['up', 'down'],
+    16: ['left', 'right'],
     17: ['up', 'down'],
-    18: ['left', 'right'],
+    18: ['up', 'down'],
     19: ['up', 'down'],
     20: ['left', 'right'],
     21: ['left', 'right'],
@@ -157,13 +167,13 @@ class Room:
         self.players.append(player)
 
     def addWeapon(self, weapon):
-        self.weapons.append(player)
+        self.weapons.append(weapon)
 
     def removePlayer(self, player):
         self.players.remove(player)
 
     def removeWeapon(self, weapon):
-        self.weapons.remove(player)
+        self.weapons.remove(weapon)
 
     def draw(self):
         '''

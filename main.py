@@ -2,6 +2,7 @@ from Globals import *
 from Board import Board
 from Player import Player
 import Room
+import Cards
 import time, os, random, argparse, socket, selectors, types, json
 from typing import List, Dict
 import message_drivers as Message
@@ -9,8 +10,8 @@ import message_drivers as Message
 #########################################################################
 # This is all networking garbage, you probably dont want this
 ##########################################################################
-def initNetwork():
-    global HOST, ADDR, PORT, selector, server_socket
+def initNetwork(numPlayers):
+    global HOST, ADDR, PORT, selector, server_socket, casefile, hands
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     if HOST:
         server_socket.bind((ADDR, PORT))
@@ -19,6 +20,11 @@ def initNetwork():
         server_socket.setblocking(False)
         selector.register(server_socket,selectors.EVENT_READ, data=None)
         print('server started, waiting for clients...')
+        cards = Cards.Cards()
+        casefile = cards.CaseFile()
+        cards.shufflecards()
+        cards.deal(numPlayers)
+        hands = cards.hands
     start_connections(ADDR,PORT)
 
 def sendAll(messageFunc, kwargs):
@@ -57,6 +63,8 @@ def accept_wrapper(sock):
         determineKnowledges()
         #send game start message
         sendAll(Message.send_start_game, {})
+        for i in range(numPlayers):
+            Message.send_card_set(playerAddresses[i], hands[i])
         #send first turn message
         global turn
         Message.send_ready_for_turn(playerAddresses[turn])
@@ -123,7 +131,9 @@ def initialize():
     mainBoard = Board()
     #randomly place players
     initPlayers(numPlayers)
-    initNetwork()
+    initNetwork(numPlayers)
+
+
 
 def determineOrder():
     '''
@@ -214,7 +224,7 @@ def parseMessage(jsonMessage):
     	weapon = message['weapon']
     	room = message['room']
     	# confirm accusation is correct TODO: replace below with real game state information
-    	if suspect == correctSuspect and weapon == correctWeapon and room = correctRoom:
+    	if suspect == correctSuspect and weapon == correctWeapon and room == correctRoom:
     		Message.send_game_win_accusation('ALL_CLIENTS', client, suspect, weapon, room) # should I change this to a sendAll() call?
     		game_won = True
     		# go on to display message to clients
