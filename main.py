@@ -240,6 +240,11 @@ def parseMessage(jsonMessage):
         sendAll(Message.send_update_player_pos, {'player':str(player2), 'pos':room})
 
         # TODO - disproves will be done automatically by server ***
+                # if card matches suggestion, show one to current player, and exit loop
+                # else, continue
+            # if we fall through to here, no suggestions (either send message or just continue?)
+        # end suggestion and disproves
+
     elif message_type == 'cannot_suggest':
         pass #TODO
     elif message_type == 'make_accusation' and not HOST:
