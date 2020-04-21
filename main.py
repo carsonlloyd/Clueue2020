@@ -253,8 +253,9 @@ def parseMessage(jsonMessage):
     	suspect = message['suspect']
     	weapon = message['weapon']
     	room = message['room']
-    	# confirm accusation is correct TODO: replace below with real game state information
-    	if suspect == correctSuspect and weapon == correctWeapon and room == correctRoom:
+    	# confirm accusation is correct
+        case_file = Cards.getCaseFile()
+    	if suspect == case_file['suspect'] and weapon == case_file['weapon'] and room == case_file['room']:
     		Message.send_game_win_accusation('ALL_CLIENTS', client, suspect, weapon, room) # should I change this to a sendAll() call?
     		game_won = True
     		# go on to display message to clients

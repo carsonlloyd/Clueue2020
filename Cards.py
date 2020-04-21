@@ -56,3 +56,9 @@ class Cards():
             for j in temphand:
                 hand.append(CardType(j).name)
             self.hands.append(hand)
+
+    def getCaseFile(self):
+        '''
+        This function returns the case file information
+        '''
+        return self.case_file
