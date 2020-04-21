@@ -225,15 +225,20 @@ def parseMessage(jsonMessage):
         # suspect,weapon = suggestion details from player
         suspect = weapon = None
         while suspect == None:
-            string = "Choose a suspect (" + available_suspects + "): "
+            string = "Choose a suspect (" + str(available_suspects) + "): "
             input_val = input(string)
             if input_val in available_suspects:
                 suspect = input_val
         while weapon == None:
-            string = "Choose a weapon (" + available_weapons + "): "
+            string = "Choose a weapon (" + str(available_weapons) + "): "
             input_val = input(string)
-            if input_val in available_weapons:
-                weapon = input_val
+            try:
+                input_val = int(input_val)
+                if input_val in available_weapons:
+                    weapon = input_val
+            except ValueError:
+                pass
+            
         Message.send_suggestion((ADDR,PORT), str(players[turn]), suspect, weapon) # this is for sending to host server right?
     elif message_type == 'suggestion':
         # receive suggestion from client
