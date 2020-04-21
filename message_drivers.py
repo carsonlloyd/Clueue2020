@@ -188,15 +188,10 @@ def send_game_win_accusation(send_to_id, client_id, suspect, weapon, room, debug
 				}
 	send_message(send_to_id, message, debug_flag)
 
-def send_make_disprove(send_to_id, client_id, suspect, weapon, room, suspects, weapons, rooms, debug_flag=False):
+def send_make_disprove(send_to_id, client_id, matches, debug_flag=False):
 	message = {	"message_type": "make_disprove",
 				"client_id": client_id,
-				"suspect": suspect,
-				"weapon": weapon,
-				"room": room,
-				"suspects": suspects,
-				"weapons": weapons,
-				"rooms": rooms
+				"matches": matches
 				}
 	send_message(send_to_id, message, debug_flag)
 
@@ -204,12 +199,9 @@ def send_cannot_disprove(send_to_id, debug_flag=False):
 	message = {	"message_type": "cannot_disprove" }
 	send_message(send_to_id, message, debug_flag)
 
-def send_disprove_made(send_to_id, client_id, suspect, weapon, room, debug_flag=False):
+def send_disprove_made(send_to_id, pick, debug_flag=False):
 	message = {	"message_type": "disprove_made",
-				"client_id": client_id,
-				"suspect": suspect,
-				"weapon": weapon,
-				"room": room
+				"pick": pick #the chosen card
 				}
 	send_message(send_to_id, message, debug_flag)
 

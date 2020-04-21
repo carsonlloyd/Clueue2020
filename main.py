@@ -241,27 +241,60 @@ def parseMessage(jsonMessage):
         sendAll(Message.send_update_player_pos, {'player':str(player2), 'pos':room})
 
         # TODO - disproves will be done automatically by server ***
+        done_disprove = False
+        disproved = False
+        d_card = None
         for p in players[~player]:
             for card in p.getHand():
                 # if card matches suggestion, show one to current player, and exit loop
+                # TODO technically if more than one matches, the player disproving should be allowed to choose the card to show
+                # need to add back and forth messaging and client prompts:
+
+                matches = []
                 if card == suspect: # TODO check types
-                    pass # TODO show card to player (send disprove message back to player client)
+                    matches.append(card)
                 elif card == weapon: # TODO check types
-                    pass # TODO show card to player (send disprove message back to player client)
+                    matches.append(card)
                 elif card == room: # TODO check types
-                    pass # TODO show card to player (send disprove message back to player client)
-                else:
-                    pass
-            # if we fall through to here, no suggestions (either send message or just continue?)
+                    matches.append(card)
+            if matches:
+                # server send info to suggesting-player
+                Message.send_make_disprove(playerAddresses(p), player, matches)
+                
+                done_disprove = True
+                disproved = True
+            else:
+                pass # move on to next player
+            
+            if done_disprove:
+                break
         # end suggestion and disproves
+        # TODO do we need to indicate end turn here?
+        if not disproved:
+            # allow accusation
+            available_suspects = [p.name for p in players if p != player] # remove current player
+            available_weapons = mainBoard.getWeapons()
+            Message.send_make_accusation(playerAddresses[turn], available_suspects, available_weapons)
 
     elif message_type == 'cannot_suggest':
         pass #TODO
+    elif message_type == 'make_disprove':
+        matches = message['matches']
+        # TODO allow player to choose which match to send back
+        pick = matches[0] # default to 0 for now
+        Message.send_disprove_made((ADDR,PORT), pick)
+    elif message_type == 'disprove_made':
+        # show player the card chosen to disprove them
+        pass
     elif message_type == 'make_accusation' and not HOST:
         available_suspects = [player.name for player in players]
         available_weapons = mainBoard.getWeapons()
         available_rooms = [r.getRoomType() for r in mainBoard.getRooms() if r.getPlayers()] # list rooms, from board's rooms if room has player(s)
-        Message.send_make_accusation(playerAddresses[turn], available_suspects, available_weapons, available_rooms)
+        # TODO allow player to choose
+        suspect = available_suspects[0] # DEFAULTING FOR NOW
+        weapon = available_weapons[0]
+        room = available_rooms[0]
+        Message.send_accusation_made((ADDR,PORT), suspect, weapon, room)
     elif message_type == 'accusation_made' and HOST:
     	global correctSuspect, correctWeapon, correctRoom
     	client = message['client_id']
