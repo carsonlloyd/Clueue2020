@@ -229,19 +229,23 @@ def parseMessage(jsonMessage):
         client = message['client_id']
         suspect = message['suspect']
         weapon = message['weapon']
-        room = mainBoard.getPlayerRoom(player) # or should we use mainBoard.getPlayerRoom(player).getRoomType()
+        room = mainBoard.getPlayerRoom(player)
+        
         # move suspect and weapon to this room
-        mainBoard.updatePlayerPos(getPlayerBySymbol(suspect), room)
-        # TODO update boards OR depending on decision above, this send_update_player_pos will be in the Board class under the two move functions
-        sendAll(Message.send_update_player_pos, {'player':str(player), 'pos':mainBoard.getPlayerRoom(player)})
+        player2 = getPlayerBySymbol(suspect)
+        player2_oldRoom = mainBoard.getPlayerRoom(player2)
+        player2_oldRoom.removeWeapon(weapon)
+        room.addWeapon(weapon)
+        mainBoard.updatePlayerPos(player2, room)
+        sendAll(Message.send_update_player_pos, {'player':str(player2), 'pos':room})
 
-        # TODO - disproves will be done automatically by server
+        # TODO - disproves will be done automatically by server ***
     elif message_type == 'cannot_suggest':
         pass #TODO - not sure this is actually needed?
     elif message_type == 'make_accusation' and not HOST:
         available_suspects = [player.name for player in players]
         available_weapons = mainBoard.getWeapons()
-        available_rooms = rooms # should this be only occupied rooms? TODO
+        available_rooms = [r.getRoomType() for r in mainBoard.getRooms() if r.getPlayers()] # list rooms, from board's rooms if room has player(s)
         Message.send_make_accusation(playerAddresses[turn], available_suspects, available_weapons, available_rooms)
     elif message_type == 'accusation_made' and HOST:
     	global correctSuspect, correctWeapon, correctRoom
