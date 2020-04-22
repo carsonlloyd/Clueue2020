@@ -45,3 +45,6 @@ class Player():
 
     def getHand(self, hand):
         return self.hand
+
+    def getName(self):
+        return self.name
