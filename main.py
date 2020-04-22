@@ -169,6 +169,22 @@ def getPlayerBySymbol(char):
         if char == str(player):
             return player
 
+def getSymbolFromName(name):
+    if name == 'Col. Mustard':
+        return 'M'
+    elif name == 'Miss Scarlet':
+        return 'S'
+    elif name == 'Prof. Plum' :
+        return 'P'
+    elif name == 'Mrs. Peacock':
+        return 'C'
+    elif name == 'Mr. Green':
+        return 'G'
+    elif name =='Mrs. White':
+        return 'W'
+    else:
+        return -1
+
 def incrementTurn():
     global turn, numPlayers
     turn += 1
@@ -248,9 +264,9 @@ def parseMessage(jsonMessage):
         room = mainBoard.getPlayerRoom(players[turn])
         
         # move suspect and weapon to this room
-        player2 = getPlayerBySymbol(suspect)
-        player2_oldRoom = mainBoard.getPlayerRoom(player2)
-        player2_oldRoom.removeWeapon(weapon)
+        player2 = getSymbolFromName(suspect)
+        weapon_old_room = mainBoard.getWeaponRoom(weapon)
+        weapon_old_room.removeWeapon(weapon)
         room.addWeapon(weapon)
         mainBoard.updatePlayerPos(player2, room)
         sendAll(Message.send_update_player_pos, {'player':str(player2), 'pos':room})

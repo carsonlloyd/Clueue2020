@@ -45,4 +45,3 @@ class Player():
 
     def getHand(self, hand):
         return self.hand
-

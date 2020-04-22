@@ -148,3 +148,11 @@ class Board:
         This function just returns a list of all rooms held by the Board instance.
         '''
         return self.rooms
+
+    def getWeaponRoom(self, weapon):
+        for room in self.rooms:
+            #print(str(weapon) + " : " + str(room.getWeapons()))
+            if weapon in room.getWeapons():
+                return room
+        print('ERROR: Weapon was in none of the rooms')
+        exit()
