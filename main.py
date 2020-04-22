@@ -273,13 +273,40 @@ def parseMessage(jsonMessage):
             matches = []
             if p != players[turn]:
                 for card in p.getHand():
+                    #translate
+                    if card < 9:
+                        val = card
+                    elif card == 9:
+                        val = 'Col. Mustard'
+                    elif card == 10:
+                        val = 'Miss Scarlet'
+                    elif card == 11:
+                        val = 'Prof. Plum' 
+                    elif card == 12:
+                        val = 'Mr. Green'
+                    elif card == 13:
+                        val = 'Mrs. White'
+                    elif card == 14:
+                        val = 'Mrs. Peacock'
+                    elif card == 15:
+                        val = 0
+                    elif card == 16:
+                        val = 1
+                    elif card == 17:
+                        val = 2
+                    elif card == 18:
+                        val = 3
+                    elif card == 19:
+                        val = 4
+                    elif card == 20:
+                        val = 5
                     # if more than one matches, the player disproving should be allowed to choose the card to show
                     # need to add back and forth messaging and client prompts:
-                    if card == suspect: # TODO check types
+                    if val == suspect: # TODO check types
                         matches.append(card)
-                    elif card == weapon: # TODO check types
+                    elif val == weapon: # TODO check types
                         matches.append(card)
-                    elif card == room: # TODO check types
+                    elif val == room.getRoomType(): # TODO check types
                         matches.append(card)
 
             if matches:
@@ -306,9 +333,14 @@ def parseMessage(jsonMessage):
         pass #TODO
     elif message_type == 'make_disprove':
         matches = message['matches']
-        # TODO allow player to choose which match to send back
-        pick = matches[0] # default to 0 for now
-        Message.send_disprove_made((ADDR,PORT), pick)
+        # allow player to choose which match to send back
+        choice = None
+        while choice == None:
+            string = "Choose a card (" + str([x.name for x in matches]) + "): "
+            input_val = input(string)
+            if input_val in [x.name for x in matches]:
+                choice = input_val
+        Message.send_disprove_made((ADDR,PORT), choice)
     elif message_type == 'disprove_made':
         # show player the card chosen to disprove them
         pass
@@ -328,7 +360,7 @@ def parseMessage(jsonMessage):
         weapon = message['weapon']
         room = message['room']
         # confirm accusation is correct
-        case_file = Cards.getCaseFile()
+        case_file = cards.getCaseFile()
         if suspect == case_file['suspect'] and weapon == case_file['weapon'] and room == case_file['room']:
             sendAll(Message.send_game_win_accusation, {'client':client, 'suspect':suspect, 'weapon':weapon, 'room':room})
             game_won = True
