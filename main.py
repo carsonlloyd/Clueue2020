@@ -443,6 +443,14 @@ def parseMessage(jsonMessage):
 def parseAction(action):
     if action in ['up','down','left','right','secret']:
         Message.send_player_move((ADDR,PORT), str(players[0]), action)
+    elif action == 'help':
+        print('\nThis is the game of Clue. You are playing as ' + str(players[0]) + '. Please either make a move by typing ' + \
+              'up, down, left, right, secret, or make a suggestion or accusation by typing suggest/accuse [PLAYER_SYMBOL] [ROOM_NAME] [WEAPON].')
+        print('Keep in mind that only one player can occupy a hallway at a time and suggestions for a room must be made with you in that room\n')
+        print('When you move into a room, you must make a suggestion, and one player will show you one card to disprove a part of your suggestion')
+        print('On a players turn, if they correctly accuse the right person/room/weapon then they win the game!\n')
+        global isTurn
+        isTurn = True
     elif action in ['suggest', 'accuse']:
         pass
         #do the other things
@@ -460,7 +468,7 @@ def getInput():
     global validInputs
     action = ''
     while action not in validInputs:
-        action = input('please select an action (up, down, left, right, secret, accuse, suggest): ')
+        action = input('Please select an action (up, down, left, right, secret, accuse, suggest, help): ')
 
     isTurn = False
     parseAction(action)
