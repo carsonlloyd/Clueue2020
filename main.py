@@ -1,8 +1,7 @@
 from Globals import *
 from Board import Board
 from Player import Player
-import Room
-import Cards
+import Room, Cards
 import time, os, random, argparse, socket, selectors, types, json
 from typing import List, Dict
 import message_drivers as Message
@@ -41,7 +40,7 @@ def addMessage(message, connid):
 
 def accept_wrapper(sock):
     conn, addr = sock.accept() #should be ready to read
-    global playerAddresses
+    global playerAddresses, hands
     playerAddresses[len(playerAddresses)] = addr
     messages[addr] = []
     print('accepted connection from: ', addr)
@@ -60,14 +59,14 @@ def accept_wrapper(sock):
         sendAll(Message.send_player_positions, {'positions':{str(player):mainBoard.getPlayerRoom(player).getRoomType() for player in players}})
         #determine turn order
         determineOrder()
-        determineKnowledges()
-        #send game start message
-        sendAll(Message.send_start_game, {})
+        #send out knowledge cards
         for i in range(numPlayers):
             players[i].setHand(hands[i])
             Message.send_card_set(playerAddresses[i], players[i].hand)
-        #send first turn message
+        #send game start message
+        sendAll(Message.send_start_game, {})
         global turn
+        #send first turn message
         Message.send_ready_for_turn(playerAddresses[turn])
 
 def service_connection(key, mask):
@@ -142,10 +141,6 @@ def determineOrder():
     '''
     pass
 
-def determineKnowledges():
-    pass
-
-
 def setPositions(positions):
     '''
     Takes a dictionary of player positions and places them in the correct places in a client game
@@ -197,8 +192,7 @@ def parseMessage(jsonMessage):
     elif message_type == 'ready_for_turn':
         isTurn = True
     elif message_type == 'card_set':
-        for i in range(len(players)):
-            players[i].getHand(players[i].hand)
+        players[0].setHand([Cards.CardType(c) for c in message['cards']])
     elif message_type == 'player_move' and HOST:
         player = getPlayerBySymbol(message['player'])
         if mainBoard.movePlayer(player, message['direction']):
