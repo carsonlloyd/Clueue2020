@@ -266,6 +266,7 @@ def parseMessage(jsonMessage):
         sendAll(Message.send_update_player_pos, {'player':str(player2), 'pos':room.getRoomType()})
 
         # disproves will be done automatically by server ***
+        print("STARTING DISPROVE")
         done_disprove = False
         disproved = False
         d_card = None
@@ -310,6 +311,7 @@ def parseMessage(jsonMessage):
                         matches.append(card)
 
             if matches:
+                print("DISPROVE MATCH MADE")
                 # server send info to suggesting-player
                 Message.send_make_disprove(playerAddresses(p), players[turn], matches)
                 
@@ -323,6 +325,7 @@ def parseMessage(jsonMessage):
         # end suggestion and disproves
         # TODO do we need to indicate end turn here?
         if not disproved:
+            print("NOT DISPROVED ***********")
             # allow accusation
             available_suspects = [p.name for p in players if p != players[turn]] # remove current player
             available_weapons = mainBoard.getWeapons()
@@ -343,6 +346,7 @@ def parseMessage(jsonMessage):
         Message.send_disprove_made((ADDR,PORT), choice)
     elif message_type == 'disprove_made':
         # show player the card chosen to disprove them
+        print("DISPROVED: " + message['pick'].name)
         pass
     elif message_type == 'make_accusation' and not HOST:
         available_suspects = message['suspects']
