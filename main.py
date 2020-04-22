@@ -66,6 +66,11 @@ def accept_wrapper(sock):
         for i in range(numPlayers):
             players[i].setHand(hands[i])
             Message.send_card_set(playerAddresses[i], players[i].hand)
+        #set up weapons
+        for weapon in mainBoard.getWeapons():
+            rooms = mainBoard.getRooms()
+            room = random.choice(rooms)
+            room.addWeapon(weapon)
         #send first turn message
         global turn
         Message.send_ready_for_turn(playerAddresses[turn])
