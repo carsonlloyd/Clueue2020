@@ -85,6 +85,7 @@ def service_connection(key, mask):
         recv_data = sock.recv(256)
         if recv_data:
             # print('received ' + repr(recv_data))
+            pass
         else:
             pass
             #print('no data received')
