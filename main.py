@@ -302,17 +302,17 @@ def parseMessage(jsonMessage):
                         val = 5
                     # if more than one matches, the player disproving should be allowed to choose the card to show
                     # need to add back and forth messaging and client prompts:
-                    if val == suspect: # TODO check types
+                    if val == suspect:
                         matches.append(card)
-                    elif val == weapon: # TODO check types
+                    elif val == weapon:
                         matches.append(card)
-                    elif val == room.getRoomType(): # TODO check types
+                    elif val == room.getRoomType():
                         matches.append(card)
 
             if matches:
-                print("DISPROVE MATCH MADE")
+                print("DISPROVE MATCH MADE: " + str(matches))
                 # server send info to suggesting-player
-                Message.send_make_disprove(playerAddresses(p), players[turn], matches)
+                Message.send_make_disprove(playerAddresses[players.index(p)], players[turn], matches) # TODO HERE *
                 
                 done_disprove = True
                 disproved = True
@@ -351,10 +351,27 @@ def parseMessage(jsonMessage):
         available_suspects = message['suspects']
         available_weapons = message['weapons']
         available_rooms = message['rooms']
-        # TODO allow player to choose
-        suspect = available_suspects[0] # DEFAULTING FOR NOW
-        weapon = available_weapons[0]
-        room = available_rooms[0]
+        # allow player to choose
+        suspect = weapon = room = None
+        while suspect == None:
+            string = "Choose a suspect (" + str(available_suspects) + "): "
+            input_val = input(string)
+            if input_val in available_suspects:
+                suspect = input_val
+        while weapon == None:
+            string = "Choose a weapon (" + str(available_weapons) + "): "
+            input_val = input(string)
+            try:
+                input_val = int(input_val)
+                if input_val in available_weapons:
+                    weapon = input_val
+            except ValueError:
+                pass
+        while room == None:
+            string = "Choose a room (" + str(available_rooms) + "): "
+            input_val = input(string)
+            if input_val in available_rooms:
+                room = input_val
         Message.send_accusation_made((ADDR,PORT), str(players[turn]), suspect, weapon, room)
     elif message_type == 'accusation_made' and HOST:
         global case_file
