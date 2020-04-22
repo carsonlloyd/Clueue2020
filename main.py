@@ -350,11 +350,11 @@ def parseMessage(jsonMessage):
                     # if more than one matches, the player disproving should be allowed to choose the card to show
                     # need to add back and forth messaging and client prompts:
                     if val == suspect:
-                        matches.append(cardtoString(card))
+                        matches.append(cardToString(card))
                     elif val == weapon:
                         matches.append(cardToString(card))
                     elif val == room.getRoomType():
-                        matches.append(cardtoString(card))
+                        matches.append(cardToString(card))
 
             if matches:
                 print("DISPROVE MATCH MADE: " + str(matches))
