@@ -50,9 +50,10 @@ class Board:
         '''
         updates the game board to properly display where the
         players currently are
+        Works by making a list of the characters symbols and then padding to the desired size
         #TODO: make this work for hallways as well
         '''
-        spacer = '|          |'
+        spacer = '|'
         for i in range(3):
             idx = 2 + 8*i
             self.board[idx] = '|'
@@ -62,6 +63,32 @@ class Board:
                     playerString += str(player) + ' '
                 self.board[idx] += str.center(playerString,12)
                 self.board[idx] += spacer
+                if (j<2):
+                    playerString = ' '
+                    for player in self.rooms[5*i+10+j].getPlayers():
+                        playerString += str(player) + ' '
+                    self.board[idx] += str.center(playerString,10)
+                    self.board[idx] += spacer
+            self.board[idx] += '\n'
+
+        spacer = '|                     |'
+        for i in range(2):
+            idx = 6 + 8*i
+            self.board[idx] = '      |'
+            for j in range(3):
+                playerString = ''
+                playerInHallway = False
+                for player in self.rooms[5*i+12+j].getPlayers():
+                    playerString += str(player)
+                    playerInHallway = True
+                if (playerInHallway):
+                    self.board[idx] += playerString
+                else:
+                    self.board[idx] += ' '
+                if(j<2):
+                    self.board[idx] += spacer
+                else:
+                    self.board[idx] += '|'
             self.board[idx] += '\n'
 
     def getPlayerRoom(self, player):
@@ -71,16 +98,37 @@ class Board:
         print('ERROR: Player was in none of the rooms')
         exit()
 
+    def updatePlayerPos(self, player, room):
+        '''
+        This function simply puts the player in a new place without checking,
+        having assumed that the host checked before sending the message that
+        triggers this update
+        '''
+        curRoom = self.getPlayerRoom(player)
+        curRoom.removePlayer(player)
+        room = self.rooms[room]
+        room.addPlayer(player)
+
     def movePlayer(self, player, action):
-        room = self.getPlayerRoom(player) #need to write this still
+        '''
+        This function validates a move and is generally only used by the host
+        '''
+        oldRoom = self.getPlayerRoom(player)
         global allowedMoves, roomAdjacencies
-        print(room.getRoomType())
-        if action in Room.allowedMoves[room.getRoomType()]:
-            room.removePlayer(player)
-            newRoomType = Room.roomAdjacencies[room.getRoomType()][action]
-            for room in self.rooms:
-                if room.getRoomType() == newRoomType:
-                    room.addPlayer(player)
-                    break
+        print(oldRoom.getRoomType())
+        newRoom = Room.roomAdjacencies[oldRoom.getRoomType()][action]
+        
+        canMove = True
+        # move validation
+        if action not in Room.allowedMoves[oldRoom.getRoomType()]: # move is a valid direction?
+            canMove = False
+        if newRoom > 10 and newRoom.getPlayers(): # is the hallway already occupied?
+            canMove = False
+        
+        if canMove:
+            newRoom.addPlayer(player)
+            oldRoom.removePlayer(player)                                 
+            return True
         else:
-            print("invalid move") # invalid move message - integrate with other messaging
+            print("invalid move") # invalid move message - real message sent in Main.py
+            return False

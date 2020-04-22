@@ -3,6 +3,8 @@ class Player():
     def __init__(self, name = None):
         self.location = None
         self.name = name
+        self.addr = None
+        self.hand = None
 
     def __str__(self):
         if self.name == 'Col. Mustard':
@@ -21,12 +23,26 @@ class Player():
     def __repr__(self):
         return str(self)
 
-    def setRoom(self, room):
+    def setName(self, char):
         '''
-        Sets the players location to the room/hallway they are in
-        @suggest Should move logic go here?
-        @param room  The room the player is moving to
-        @return N/A
+        Sets the players name, generally by  a successful connection to the host
         '''
+        if char == 'M':
+            self.name = 'Col. Mustard'
+        elif char == 'S':
+            self.name = 'Miss Scarlet'
+        elif char == 'P':
+            self.name = 'Prof. Plum' 
+        elif char == 'C':
+            self.name = 'Mrs. Peacock'
+        elif char == 'G':
+            self.name = 'Mr. Green'
+        elif char == 'W':
+            self.name = 'Mrs. White'
 
+    def setHand(self, cards):
+        self.hand = cards
+
+    def getHand(self, hand):
+        return self.hand
 
