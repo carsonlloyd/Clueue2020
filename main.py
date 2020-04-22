@@ -269,11 +269,15 @@ def parseMessage(jsonMessage):
         # TODO show client message to player
         # TODO request new move from player
         isTurn = True
-    elif message_type == 'update_player_pos' and not HOST:
+    elif message_type == 'update_player_pos': #and not HOST:
         updated = True
         player = getPlayerBySymbol(message['player'])
         mainBoard.updatePlayerPos(player, message['pos'])
-        Message.send_end_turn((ADDR,PORT), str(player))
+        # print(str(mainBoard.getPlayerRoom(player).getRoomType()) + " : ")
+        if mainBoard.getPlayerRoom(player).getRoomType() > Room.RoomType.MAX_ROOM: # if into hallway, end turn
+            # print(str(players[0]) + " : " + str(message['player']))
+            if str(players[0]) == message['player']:
+                Message.send_end_turn((ADDR,PORT), str(player))
     elif message_type == 'make_suggestion':
         available_suspects = message['suspects']
         available_weapons = message['weapons']
@@ -318,7 +322,7 @@ def parseMessage(jsonMessage):
         d_card = None
         for p in players:
             matches = []
-            if p != players[turn]:
+            if p is not players[turn]:
                 for card in p.getHand():
                     #translate
                     if card < 9:
@@ -357,7 +361,7 @@ def parseMessage(jsonMessage):
                         matches.append(cardToString(card))
 
             if matches:
-                print("DISPROVE MATCH MADE: " + str(matches))
+                print("DISPROVE MATCH MADE: " + str(matches) + " by player index " + str(players.index(p)))
                 # server send info to suggesting-player
                 Message.send_make_disprove(playerAddresses[players.index(p)], str(players[turn]), matches)
                 
@@ -389,12 +393,17 @@ def parseMessage(jsonMessage):
             input_val = input(string)
             if input_val in matches:
                 choice = input_val
-        Message.send_disprove_made((ADDR,PORT), choice)
+        Message.send_disprove_made((ADDR,PORT), message['client_id'], choice)
     elif message_type == 'disprove_made':
-        # show player the card chosen to disprove them
-        print("DISPROVED: " + message['pick'])
+        # TELL CLIENT
+        Message.send_disprove_notify(playerAddresses[turn], message['pick'])
         pass
-    elif message_type == 'make_accusation' and not HOST:
+    elif message_type == 'disprove_notify':
+        # show suggester what disproved them
+        print("DISPROVED: " + message['pick'])
+        Message.send_end_turn((ADDR,PORT), str(players[0]))
+    elif message_type == 'make_accusation':
+        print("IN MAKE ACCUSATION")
         available_suspects = message['suspects']
         available_weapons = message['weapons']
         available_rooms = message['rooms']
@@ -419,7 +428,7 @@ def parseMessage(jsonMessage):
             input_val = input(string)
             if input_val in available_rooms:
                 room = input_val
-        Message.send_accusation_made((ADDR,PORT), str(players[turn]), suspect, weapon, room)
+        Message.send_accusation_made((ADDR,PORT), str(players[0]), suspect, weapon, room)
     elif message_type == 'accusation_made' and HOST:
         global case_file
         client = message['client_id']
@@ -433,8 +442,13 @@ def parseMessage(jsonMessage):
             game_won = True
             # go on to display message to clients
         else:
-            sendAll(Message.send_false_accusation, {'client':client, 'suspect':suspect, 'weapon':weapon, 'room':room})
-            # go on to display message to clients
+            Message.send_false_accusation(playerAddresses[turn], suspect, weapon, room)
+            # go on to display message to client
+    elif message_type == 'game_win_accusation':
+        print("Game has been won: ") # TODO FILL OUT
+    elif message_type == 'false_accusation':
+        print("Accusation was false.")
+        Message.send_end_turn((ADDR,PORT), str(players[0]))
     elif message_type == 'end_turn' and HOST and message['client_id'] == str(players[turn]):
         incrementTurn()
         Message.send_ready_for_turn(playerAddresses[turn])

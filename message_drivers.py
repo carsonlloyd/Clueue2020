@@ -199,8 +199,15 @@ def send_cannot_disprove(send_to_id, debug_flag=False):
 	message = {	"message_type": "cannot_disprove" }
 	send_message(send_to_id, message, debug_flag)
 
-def send_disprove_made(send_to_id, pick, debug_flag=False):
+def send_disprove_made(send_to_id, client_id, pick, debug_flag=False):
 	message = {	"message_type": "disprove_made",
+				"client_id": client_id,
+				"pick": pick #the chosen card
+				}
+	send_message(send_to_id, message, debug_flag)
+
+def send_disprove_notify(send_to_id, pick, debug_flag=False):
+	message = {	"message_type": "disprove_notify",
 				"pick": pick #the chosen card
 				}
 	send_message(send_to_id, message, debug_flag)
