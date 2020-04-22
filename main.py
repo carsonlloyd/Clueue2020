@@ -252,6 +252,7 @@ def parseMessage(jsonMessage):
         isTurn = True
     elif message_type == 'card_set':
         players[0].setHand([Cards.CardType(c) for c in message['cards']])
+        print('Your cards are: ' + str([card.name for card in players[0].getHand()]))
     elif message_type == 'player_move' and HOST:
         player = getPlayerBySymbol(message['player'])
         if mainBoard.movePlayer(player, message['direction']):
