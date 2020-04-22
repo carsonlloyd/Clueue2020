@@ -84,7 +84,7 @@ def service_connection(key, mask):
     if mask & selectors.EVENT_READ:
         recv_data = sock.recv(256)
         if recv_data:
-            print('received ' + repr(recv_data))
+            # print('received ' + repr(recv_data))
         else:
             pass
             #print('no data received')
@@ -94,7 +94,7 @@ def service_connection(key, mask):
     if mask & selectors.EVENT_WRITE:
         if messages[data.connid]:
             data.outb = messages[data.connid].pop(0)
-            print('sending ', repr(data.outb), ' to ', data.connid)
+            # print('sending ', repr(data.outb), ' to ', data.connid)
             sent = sock.send(data.outb) # Should be ready to write
             data.outb = data.outb[sent:]
     else:
