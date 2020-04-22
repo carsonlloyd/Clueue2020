@@ -176,6 +176,53 @@ def getPlayerFromName(name):
         if name == player.getName():
             return player
 
+def cardToString(card):
+        #translate
+    val = -1
+    if card == 0:
+        val = "Study"
+    if card == 1:
+        val = "Hall"
+    if card == 2:
+        val = "Lounge"
+    if card == 3:
+        val = "Library"
+    if card == 4:
+        val = "Billiard Room"
+    if card == 5:
+        val = "Dining Room"
+    if card == 6:
+        val = "Conservatory"
+    if card == 7:
+        val = "Ball Room"
+    elif card == 8:
+        val = "Kitchen"
+    elif card == 9:
+        val = 'Col. Mustard'
+    elif card == 10:
+        val = 'Miss Scarlet'
+    elif card == 11:
+        val = 'Prof. Plum' 
+    elif card == 12:
+        val = 'Mr. Green'
+    elif card == 13:
+        val = 'Mrs. White'
+    elif card == 14:
+        val = 'Mrs. Peacock'
+    elif card == 15:
+        val = "Rope"
+    elif card == 16:
+        val = "Lead pipe"
+    elif card == 17:
+        val = "Knife"
+    elif card == 18:
+        val = "Wrench"
+    elif card == 19:
+        val = "Candlestick"
+    elif card == 20:
+        val = "Revolver"
+    return val
+
 def incrementTurn():
     global turn, numPlayers
     turn += 1
@@ -303,16 +350,16 @@ def parseMessage(jsonMessage):
                     # if more than one matches, the player disproving should be allowed to choose the card to show
                     # need to add back and forth messaging and client prompts:
                     if val == suspect:
-                        matches.append(card)
+                        matches.append(cardtoString(card))
                     elif val == weapon:
-                        matches.append(card)
+                        matches.append(cardToString(card))
                     elif val == room.getRoomType():
-                        matches.append(card)
+                        matches.append(cardtoString(card))
 
             if matches:
                 print("DISPROVE MATCH MADE: " + str(matches))
                 # server send info to suggesting-player
-                Message.send_make_disprove(playerAddresses[players.index(p)], players[turn], matches) # TODO HERE *
+                Message.send_make_disprove(playerAddresses[players.index(p)], str(players[turn]), matches)
                 
                 done_disprove = True
                 disproved = True
@@ -324,7 +371,7 @@ def parseMessage(jsonMessage):
         # end suggestion and disproves
         # TODO do we need to indicate end turn here?
         if not disproved:
-            print("NOT DISPROVED ***********")
+            print("NOT DISPROVED")
             # allow accusation
             available_suspects = [p.name for p in players if p != players[turn]] # remove current player
             available_weapons = mainBoard.getWeapons()
@@ -338,14 +385,14 @@ def parseMessage(jsonMessage):
         # allow player to choose which match to send back
         choice = None
         while choice == None:
-            string = "Choose a card (" + str([x.name for x in matches]) + "): "
+            string = "Choose a card (" + str(matches) + "): "
             input_val = input(string)
-            if input_val in [x.name for x in matches]:
+            if input_val in matches:
                 choice = input_val
         Message.send_disprove_made((ADDR,PORT), choice)
     elif message_type == 'disprove_made':
         # show player the card chosen to disprove them
-        print("DISPROVED: " + message['pick'].name)
+        print("DISPROVED: " + message['pick'])
         pass
     elif message_type == 'make_accusation' and not HOST:
         available_suspects = message['suspects']
