@@ -56,7 +56,7 @@ class Cards():
             temphand = self.deck[i::numPlayers]
             hand = []
             for j in temphand:
-                hand.append(CardType(j).name)
+                hand.append(CardType(j).value)
             self.hands.append(hand)
 
     def getCaseFile(self):
