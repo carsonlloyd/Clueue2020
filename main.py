@@ -262,28 +262,29 @@ def parseMessage(jsonMessage):
         weapon_old_room = mainBoard.getWeaponRoom(weapon)
         weapon_old_room.removeWeapon(weapon)
         room.addWeapon(weapon)
-        mainBoard.updatePlayerPos(player2, room)
-        sendAll(Message.send_update_player_pos, {'player':str(player2), 'pos':room})
+        mainBoard.updatePlayerPos(player2, room.getRoomType())
+        sendAll(Message.send_update_player_pos, {'player':str(player2), 'pos':room.getRoomType()})
 
         # disproves will be done automatically by server ***
         done_disprove = False
         disproved = False
         d_card = None
-        for p in players[~player]:
-            for card in p.getHand():
-                # if more than one matches, the player disproving should be allowed to choose the card to show
-                # need to add back and forth messaging and client prompts:
-                matches = []
-                if card == suspect: # TODO check types
-                    matches.append(card)
-                elif card == weapon: # TODO check types
-                    matches.append(card)
-                elif card == room: # TODO check types
-                    matches.append(card)
+        for p in players:
+            matches = []
+            if p != players[turn]:
+                for card in p.getHand():
+                    # if more than one matches, the player disproving should be allowed to choose the card to show
+                    # need to add back and forth messaging and client prompts:
+                    if card == suspect: # TODO check types
+                        matches.append(card)
+                    elif card == weapon: # TODO check types
+                        matches.append(card)
+                    elif card == room: # TODO check types
+                        matches.append(card)
 
             if matches:
                 # server send info to suggesting-player
-                Message.send_make_disprove(playerAddresses(p), player, matches)
+                Message.send_make_disprove(playerAddresses(p), players[turn], matches)
                 
                 done_disprove = True
                 disproved = True
@@ -296,7 +297,7 @@ def parseMessage(jsonMessage):
         # TODO do we need to indicate end turn here?
         if not disproved:
             # allow accusation
-            available_suspects = [p.name for p in players if p != player] # remove current player
+            available_suspects = [p.name for p in players if p != players[turn]] # remove current player
             available_weapons = mainBoard.getWeapons()
             available_rooms = [r.getRoomType() for r in mainBoard.getRooms() if r.getPlayers()] # list rooms, from board's rooms if room has player(s)
             Message.send_make_accusation(playerAddresses[turn], available_suspects, available_weapons, available_rooms)
