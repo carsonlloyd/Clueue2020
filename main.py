@@ -21,6 +21,7 @@ def initNetwork(numPlayers):
         print('server started, waiting for clients...')
         cards = Cards.Cards()
         casefile = cards.CaseFile()
+        # print(str(cards.getCaseFile()))
         cards.shufflecards()
         cards.deal(numPlayers)
         hands = cards.hands
@@ -386,7 +387,6 @@ def parseMessage(jsonMessage):
             if done_disprove:
                 break
         # end suggestion and disproves
-        # TODO do we need to indicate end turn here?
         if not disproved:
             #print("NOT DISPROVED")
             # allow accusation
