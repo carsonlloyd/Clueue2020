@@ -117,7 +117,7 @@ class Board:
         '''
         oldRoom = self.getPlayerRoom(player)
         global allowedMoves, roomAdjacencies
-        print(oldRoom.getRoomType())
+        # print(oldRoom.getRoomType())
         
         canMove = True
         newRoom = None # scope this
@@ -134,7 +134,8 @@ class Board:
             oldRoom.removePlayer(player)
             return True
         else:
-            print("invalid move") # invalid move message - real message sent in Main.py
+            # prints on server
+            # print("invalid move") # invalid move message - real message sent in Main.py
             return False
 
     def getWeapons(self):

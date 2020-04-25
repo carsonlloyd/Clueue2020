@@ -305,7 +305,7 @@ def parseMessage(jsonMessage):
                 input_val = Room.WeaponType[input_val].value
                 if input_val in available_weapons:
                     weapon = input_val
-            except ValueError:
+            except KeyError:
                 pass
             
         Message.send_suggestion((ADDR,PORT), str(players[turn]), suspect, weapon) # this is for sending to host server right?
@@ -440,7 +440,7 @@ def parseMessage(jsonMessage):
                 input_val = Room.WeaponType[input_val].value
                 if input_val in available_weapons:
                     weapon = input_val
-            except ValueError:
+            except KeyError:
                 pass
         while room == None:
             string = "Choose a room (" + str(available_rooms) + "): "
@@ -511,7 +511,7 @@ def getInput():
     global validInputs
     action = ''
     while action not in validInputs:
-        action = input('Please select an action (up, down, left, right, secret, accuse, suggest, help): ')
+        action = input('Please select an action (up, down, left, right, secret, help): ')
 
     isTurn = False
     parseAction(action)
