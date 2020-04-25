@@ -170,13 +170,8 @@ def send_accusation_made(send_to_id, client_id, suspect, weapon, room, debug_fla
 				}
 	send_message(send_to_id, message, debug_flag)
 
-def send_false_accusation(send_to_id, client_id, suspect, weapon, room, debug_flag=False):
-	message = {	"message_type": "false_accusation",
-				"client_id": client_id,
-				"suspect": suspect,
-				"weapon": weapon,
-				"room": room
-				}
+def send_false_accusation(send_to_id, debug_flag=False):
+	message = {	"message_type": "false_accusation" }
 	send_message(send_to_id, message, debug_flag)
 
 def send_game_win_accusation(send_to_id, client_id, suspect, weapon, room, debug_flag=False):
