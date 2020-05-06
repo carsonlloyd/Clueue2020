@@ -1,44 +1,36 @@
 import Room
-import os
+import os, pygame
 
 class Board:
 
     def __init__(self):
-        # Creates a brand new, blank board data structure.
-        self.rooms = [Room.Room(roomType) for roomType in Room.RoomType]
-        self.board = []
+        # Creates a brand new, blank board data structure
 
+        DISPLAYSURF = pygame.display.set_mode((960, 720))
+        pygame.display.set_caption('Clueless')
+        black = (0,0,0)
+        white = (255,255,255)
+        boardimg = pygame.image.load('gameboard.png')
+        greenimg = pygame.image.load('green.png')
+        mustardimg = pygame.image.load('mustard.png')
+        scarlettimg = pygame.image.load('scarlett.png')
+        plumimg = pygame.image.load('plum.png')
+        whiteimg = pygame.image.load('white.png')
+        peacockimg = pygame.image.load('peacock.png')
+        
+        DISPLAYSURF.fill(white)
+        DISPLAYSURF.blit(boardimg, (0,0))
+        DISPLAYSURF.blit(greenimg, (295,650))
+        DISPLAYSURF.blit(whiteimg, (605,650))
+        DISPLAYSURF.blit(peacockimg, (20,450))
+        DISPLAYSURF.blit(plumimg, (20,230))
+        DISPLAYSURF.blit(scarlettimg, (605,20))
+        DISPLAYSURF.blit(mustardimg, (900,230))
+
+        self.board = DISPLAYSURF
+        self.rooms = [Room.Room(roomType) for roomType in Room.RoomType]
         self.weapons = [w.value for w in Room.WeaponType]
 
-        self.room_empty =    '|            |----------|            |----------|            |\n'
-        self.room_r1 = '|    Study   |----------|    Hall    |----------|   Lounge   |\n'
-        self.room_r2 = '|   Library  |----------|  Billiard  |----------|   Dining   |\n'
-        self.room_r3 = '|Conservatory|----------|  Ballroom  |----------|   Kitchen  |\n'
-        self.room_tb = '|            |          |            |          |            |\n'
-        self.room_secret = '|           >|          |            |          |<           |\n'
-        self.hallway = '      | |                     | |                     | |    \n'
-
-        self.board.append(self.room_tb)
-        self.board.append(self.room_r1)
-        self.board.append(self.room_tb)#2
-        self.board.append(self.room_empty)
-        self.board.append(self.room_secret)
-        self.board.append(self.hallway)
-        self.board.append(self.hallway)
-        self.board.append(self.hallway)
-        self.board.append(self.room_tb)
-        self.board.append(self.room_r2)
-        self.board.append(self.room_tb) #10
-        self.board.append(self.room_empty)
-        self.board.append(self.room_tb)
-        self.board.append(self.hallway)
-        self.board.append(self.hallway)
-        self.board.append(self.hallway)
-        self.board.append(self.room_secret)
-        self.board.append(self.room_r3)
-        self.board.append(self.room_tb) #18
-        self.board.append(self.room_empty)
-        self.board.append(self.room_tb)
 
     def draw(self):
         fullboard = ''

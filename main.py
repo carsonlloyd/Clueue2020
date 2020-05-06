@@ -2,9 +2,11 @@ from Globals import *
 from Board import Board
 from Player import Player
 import Room, Cards
-import time, os, random, argparse, socket, selectors, types, json
+import time, os, random, argparse, socket, selectors, types, json, sys
 from typing import List, Dict
 import message_drivers as Message
+import pygame
+from pygame.locals import *
 
 #########################################################################
 # This is all networking garbage, you probably dont want this
@@ -571,13 +573,22 @@ def main():
     Update will change the game state (or process state update message as client)
     Render will draw all graphical items based on that state (no render for host)
     '''
+    pygame.init()
     initialize()
 
     global game_won
     while not game_won:
-        action = getInput()
-        update(action)
-        render()
+        for event in pygame.event.get():
+            if event.type == QUIT:
+                pygame.quit()
+                sys.exit()
+        pygame.display.update()
+
+    #global game_won
+    #while not game_won:
+    #    action = getInput()
+    #    update(action)
+    #    render()
 
     # game_won = True, what else? cleanup? TODO
 
