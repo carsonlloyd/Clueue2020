@@ -43,6 +43,8 @@ class Player():
     def setHand(self, cards):
         self.hand = cards
 
-    def getHand(self, hand):
+    def getHand(self):
         return self.hand
 
+    def getName(self):
+        return self.name

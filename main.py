@@ -10,7 +10,7 @@ import message_drivers as Message
 # This is all networking garbage, you probably dont want this
 ##########################################################################
 def initNetwork(numPlayers):
-    global HOST, ADDR, PORT, selector, server_socket, casefile, hands
+    global HOST, ADDR, PORT, selector, server_socket, casefile, hands, cards
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     if HOST:
         server_socket.bind((ADDR, PORT))
@@ -21,6 +21,7 @@ def initNetwork(numPlayers):
         print('server started, waiting for clients...')
         cards = Cards.Cards()
         casefile = cards.CaseFile()
+        # print(str(cards.getCaseFile()))
         cards.shufflecards()
         cards.deal(numPlayers)
         hands = cards.hands
@@ -62,7 +63,14 @@ def accept_wrapper(sock):
         #send out knowledge cards
         for i in range(numPlayers):
             players[i].setHand(hands[i])
-            Message.send_card_set(playerAddresses[i], players[i].hand)
+            Message.send_card_set(playerAddresses[i], players[i].getHand())
+
+        #set up weapons
+        for weapon in mainBoard.getWeapons():
+            rooms = mainBoard.getRooms()
+            room = random.choice(rooms)
+            room.addWeapon(weapon)
+
         #send game start message
         sendAll(Message.send_start_game, {})
         global turn
@@ -77,7 +85,8 @@ def service_connection(key, mask):
     if mask & selectors.EVENT_READ:
         recv_data = sock.recv(256)
         if recv_data:
-            print('received ' + repr(recv_data))
+            # print('received ' + repr(recv_data))
+            pass
         else:
             pass
             #print('no data received')
@@ -87,7 +96,7 @@ def service_connection(key, mask):
     if mask & selectors.EVENT_WRITE:
         if messages[data.connid]:
             data.outb = messages[data.connid].pop(0)
-            print('sending ', repr(data.outb), ' to ', data.connid)
+            # print('sending ', repr(data.outb), ' to ', data.connid)
             sent = sock.send(data.outb) # Should be ready to write
             data.outb = data.outb[sent:]
     else:
@@ -134,7 +143,6 @@ def initialize():
     initNetwork(numPlayers)
 
 
-
 def determineOrder():
     '''
     Currently going to be the default connection order for demo purposes
@@ -165,6 +173,62 @@ def getPlayerBySymbol(char):
         if char == str(player):
             return player
 
+def getPlayerFromName(name):
+    for player in players:
+        if name == player.getName():
+            return player
+
+def cardToString(cards):
+    '''
+    Translate card int enum into a display string
+    '''
+    temp = []
+    for card in cards:
+        if card == 0:
+            val = 'Study'
+        elif card == 1:
+            val = 'Hall'
+        elif card == 2:
+            val = 'Lounge'
+        elif card == 3:
+            val = 'Library'
+        elif card == 4:
+            val = 'Billiard room'
+        elif card == 5:
+            val = 'Dining room'
+        elif card == 6:
+            val = 'Conservatory'
+        elif card == 7:
+            val = 'Ballroom'
+        elif card == 8:
+            val = 'Kitchen'
+        elif card == 9:
+            val = 'Col. Mustard'
+        elif card == 10:
+            val = 'Miss Scarlet'
+        elif card == 11:
+            val = 'Prof. Plum'
+        elif card == 12:
+            val = 'Mr. Green'
+        elif card == 13:
+            val = 'Mrs. White'
+        elif card == 14:
+            val = 'Mrs. Peacock'
+        elif card > 14:
+            val = 'Rope'
+        elif card == 16:
+            val = 'Lead pipe'
+        elif card == 17:
+            val = 'Knife'
+        elif card == 18:
+            val = 'Wrench'
+        elif card == 19:
+            val = 'Candlestick'
+        elif card == 20:
+            val = 'Revolver'
+        temp.append(val)
+    return temp
+
 def incrementTurn():
     global turn, numPlayers
     turn += 1
@@ -177,7 +241,7 @@ def parseMessage(jsonMessage):
     Feel free to break out anything into functions, I'll probably do that later for most of this
     to make it look less gross
     '''
-    global isTurn, gameStarted, updated, turn, HOST
+    global isTurn, gameStarted, updated, turn, HOST, playerNames
     message = json.loads(jsonMessage)
     message_type = message['message_type']
     if message_type == 'player_connected':
@@ -193,13 +257,19 @@ def parseMessage(jsonMessage):
         isTurn = True
     elif message_type == 'card_set':
         players[0].setHand([Cards.CardType(c) for c in message['cards']])
+        print('Your cards are: ' + str([card.name for card in players[0].getHand()]))
     elif message_type == 'player_move' and HOST:
         player = getPlayerBySymbol(message['player'])
         if mainBoard.movePlayer(player, message['direction']):
             updated = True
-            sendAll(Message.send_update_player_pos, {'player':str(player), 'pos':mainBoard.getPlayerRoom(player).getRoomType()})
+            sendAll(Message.send_update_player_pos, {'player':str(player), 'pos':mainBoard.getPlayerRoom(player).getRoomType()}) 
 
-            # TODO is this where MAKE_ACCUSATION would be sent to the client?
+            # is this where make_suggestion would be sent to the client?
+            if mainBoard.getPlayerRoom(player).getRoomType() < Room.RoomType.MAX_ROOM:
+                global playerNames
+                available_suspects = playerNames
+                available_weapons = mainBoard.getWeapons()
+                Message.send_make_suggestion(playerAddresses[turn], available_suspects, available_weapons)
         else:
             #send failure message so they can resend turn
             Message.send_cannot_move(playerAddresses[turn])
@@ -207,35 +277,214 @@ def parseMessage(jsonMessage):
         # TODO show client message to player
         # TODO request new move from player
         isTurn = True
-    elif message_type == 'update_player_pos' and not HOST:
+    elif message_type == 'update_player_pos': #and not HOST:
         updated = True
         player = getPlayerBySymbol(message['player'])
         mainBoard.updatePlayerPos(player, message['pos'])
-        Message.send_end_turn((ADDR,PORT), str(player))
-    elif message_type == 'make_accusation' and not HOST:
-    	# TODO client make accusation
+        # print(str(mainBoard.getPlayerRoom(player).getRoomType()) + " : ")
+        if mainBoard.getPlayerRoom(player).getRoomType() > Room.RoomType.MAX_ROOM: # if into hallway, end turn
+            # print(str(players[0]) + " : " + str(message['player']))
+            if str(players[0]) == message['player']:
+                Message.send_end_turn((ADDR,PORT), str(player))
+    elif message_type == 'make_suggestion':
+        print("Make suggestion: ")
+        available_suspects = message['suspects']
+        available_weapons = message['weapons']
+        # TODO present gui for player to make suggestion
+        # suspect,weapon = suggestion details from player
+        suspect = weapon = None
+        while suspect == None:
+            string = "Choose a suspect (" + str(available_suspects) + "): "
+            input_val = input(string)
+            if input_val in available_suspects:
+                suspect = input_val
+        while weapon == None:
+            string = "Choose a weapon (" + str([Room.WeaponType(x).name for x in available_weapons]) + "): "
+            input_val = input(string)
+            try:
+                input_val = Room.WeaponType[input_val].value
+                if input_val in available_weapons:
+                    weapon = input_val
+            except KeyError:
+                pass
+            
+        Message.send_suggestion((ADDR,PORT), str(players[turn]), suspect, weapon) # this is for sending to host server right?
+    elif message_type == 'suggestion':
+        # receive suggestion from client
+        client = message['client_id']
+        suspect = message['suspect']
+        weapon = message['weapon']
+        room = mainBoard.getPlayerRoom(players[turn])
+        
+        # move suspect and weapon to this room
+        player2 = getPlayerFromName(suspect)
+        weapon_old_room = mainBoard.getWeaponRoom(weapon)
+        weapon_old_room.removeWeapon(weapon)
+        room.addWeapon(weapon)
+        if player2 in players:
+            mainBoard.updatePlayerPos(player2, room.getRoomType())
+            sendAll(Message.send_update_player_pos, {'player':str(player2), 'pos':room.getRoomType()})
+
+        # disproves will be done automatically by server ***
+        #print("STARTING DISPROVE")
+        done_disprove = False
+        disproved = False
+        d_card = None
+        for p in players:
+            matches = []
+            if p is not players[turn]:
+                for card in p.getHand():
+                    #translate card enum so that we can match other data types
+                    if card < 9:
+                        val = card
+                    elif card == 9:
+                        val = 'Col. Mustard'
+                    elif card == 10:
+                        val = 'Miss Scarlet'
+                    elif card == 11:
+                        val = 'Prof. Plum'
+                    elif card == 12:
+                        val = 'Mr. Green'
+                    elif card == 13:
+                        val = 'Mrs. White'
+                    elif card == 14:
+                        val = 'Mrs. Peacock'
+                    elif card == 15:
+                        val = 'ROPE'
+                    elif card == 16:
+                        val = 'LEAD_PIPE'
+                    elif card == 17:
+                        val = 'KNIFE'
+                    elif card == 18:
+                        val = 'WRENCH'
+                    elif card == 19:
+                        val = 'CANDLESTICK'
+                    elif card == 20:
+                        val = 'REVOLVER'
+
+                    # if more than one matches, the player disproving should be allowed to choose the card to show
+                    # need to add back and forth messaging and client prompts:
+                    if val == suspect:
+                        #print(str(val) + " : " + suspect)
+                        matches.append(card)
+                    elif val == Room.WeaponType(weapon).name:
+                        #print(str(val) + " : " + str(Room.WeaponType(weapon).name))
+                        matches.append(card)
+                    elif val == room.getRoomType():
+                        #print(str(val) + " : " + str(room.getRoomType()))
+                        matches.append(card)
+
+            if matches:
+                #print("DISPROVE MATCH MADE: " + str(cardToString(matches)) + " by player index " + str(players.index(p)))
+                # server send info to suggesting-player
+                Message.send_make_disprove(playerAddresses[players.index(p)], str(players[turn]), matches)
+                
+                done_disprove = True
+                disproved = True
+            else:
+                pass # move on to next player
+            
+            if done_disprove:
+                break
+        # end suggestion and disproves
+        if not disproved:
+            #print("NOT DISPROVED")
+            # allow accusation
+            available_suspects = playerNames
+            available_weapons = mainBoard.getWeapons()
+            available_rooms = [r.getRoomType() for r in mainBoard.getRooms() if r.getPlayers() and r.getRoomType() < Room.RoomType.MAX_ROOM] # list rooms, from board's rooms if room has player(s)
+            Message.send_make_accusation(playerAddresses[turn], available_suspects, available_weapons, available_rooms)
+
+    elif message_type == 'cannot_suggest':
+        pass #TODO
+    elif message_type == 'make_disprove':
+        print("Make disprove: ")
+        matches = message['matches'] # these are CardType enums
+        # allow player to choose which match to send back
+        matches = cardToString(matches)
+
+        choice = None
+        while choice == None:
+            string = "Choose a card (" + str(matches) + "): "
+            input_val = input(string)
+            if input_val in matches:
+                choice = input_val
+        Message.send_disprove_made((ADDR,PORT), message['client_id'], choice)
+    elif message_type == 'disprove_made':
+        # TELL CLIENT
+        Message.send_disprove_notify(playerAddresses[turn], message['pick'])
         pass
+    elif message_type == 'disprove_notify':
+        # show suggester what disproved them
+        print("DISPROVED: " + message['pick'])
+        Message.send_end_turn((ADDR,PORT), str(players[0]))
+    elif message_type == 'make_accusation':
+        print("Make accusation: ")
+        available_suspects = message['suspects']
+        available_weapons = message['weapons']
+        available_rooms = message['rooms']
+        # convert rooms for usability
+        for i in range(len(available_rooms)):
+            available_rooms[i] = Room.RoomType(available_rooms[i]).name
+        # allow player to choose
+        suspect = weapon = room = None
+        while suspect == None:
+            string = "Choose a suspect (" + str(available_suspects) + "): "
+            input_val = input(string)
+            if input_val in available_suspects:
+                suspect = input_val
+        while weapon == None:
+            string = "Choose a weapon (" + str([Room.WeaponType(x).name for x in available_weapons]) + "): "
+            input_val = input(string)
+            try:
+                input_val = Room.WeaponType[input_val].value
+                if input_val in available_weapons:
+                    weapon = input_val
+            except KeyError:
+                pass
+        while room == None:
+            string = "Choose a room (" + str(available_rooms) + "): "
+            input_val = input(string)
+            if input_val in available_rooms:
+                room = input_val
+        Message.send_accusation_made((ADDR,PORT), str(players[0]), suspect, weapon, room)
     elif message_type == 'accusation_made' and HOST:
-    	global correctSuspect, correctWeapon, correctRoom
-    	client = message['client_id']
-    	suspect = message['suspect']
-    	weapon = message['weapon']
-    	room = message['room']
-    	# confirm accusation is correct TODO: replace below with real game state information
-    	if suspect == correctSuspect and weapon == correctWeapon and room == correctRoom:
-    		Message.send_game_win_accusation('ALL_CLIENTS', client, suspect, weapon, room) # should I change this to a sendAll() call?
-    		game_won = True
-    		# go on to display message to clients
-    	else:
-    		Message.send_false_accusation('ALL_CLIENTS', client, suspect, weapon, room) # should I change this to a sendAll() call?
-    		# go on to display message to clients
+        global cards
+        client = message['client_id']
+        suspect = message['suspect']
+        weapon = message['weapon']
+        room = message['room']
+        # confirm accusation is correct
+        case_file = cards.getCaseFile()
+
+        # translate case file to match user strings
+        cf_suspect = cf_weapon = None
+        for c in Cards.CardType:
+            if c.name == case_file['suspect']:
+                cf_suspect = cardToString([c])[0]
+
+        if suspect == cf_suspect and Room.WeaponType(weapon).name == case_file['weapon'] and room == case_file['room']:
+            sendAll(Message.send_game_win_accusation, {'client_id':client, 'suspect':suspect, 'weapon':case_file['weapon'], 'room':room})
+            game_won = True
+            # go on to display message to clients
+        else:
+            Message.send_false_accusation(playerAddresses[turn])
+            # go on to display message to client
+    elif message_type == 'game_win_accusation':
+        culprit = str(message['suspect'])
+        weapon = str(message['weapon'])
+        room = str(message['room'])
+        print("Game has been won: " + culprit + " in the " + room + " with the " + weapon)
+    elif message_type == 'false_accusation':
+        print("Accusation was false.")
+        Message.send_end_turn((ADDR,PORT), str(players[0]))
     elif message_type == 'end_turn' and HOST and message['client_id'] == str(players[turn]):
         incrementTurn()
         Message.send_ready_for_turn(playerAddresses[turn])
         
 
 def parseAction(action):
-    if action in ['up','down','left','right']:
+    if action in ['up','down','left','right','secret']:
         Message.send_player_move((ADDR,PORT), str(players[0]), action)
     elif action == 'help':
         print('\nThis is the game of Clue. You are playing as ' + str(players[0]) + '. Please either make a move by typing ' + \
@@ -262,7 +511,7 @@ def getInput():
     global validInputs
     action = ''
     while action not in validInputs:
-        action = input('Please select an action (up, down, left, right, secret, accuse, suggest, help): ')
+        action = input('Please select an action (up, down, left, right, secret, help): ')
 
     isTurn = False
     parseAction(action)
@@ -309,7 +558,7 @@ def render():
         print('waiting for game to start...')
         updated = False
         return
-    os.system('clear')
+    os.system('cls' if os.name == 'nt' else 'clear') # comment out to stop clearing screen
     mainBoard.draw()
     updated = False
     

@@ -8,6 +8,8 @@ class Board:
         self.rooms = [Room.Room(roomType) for roomType in Room.RoomType]
         self.board = []
 
+        self.weapons = [w.value for w in Room.WeaponType]
+
         self.room_empty =    '|            |----------|            |----------|            |\n'
         self.room_r1 = '|    Study   |----------|    Hall    |----------|   Lounge   |\n'
         self.room_r2 = '|   Library  |----------|  Billiard  |----------|   Dining   |\n'
@@ -115,20 +117,43 @@ class Board:
         '''
         oldRoom = self.getPlayerRoom(player)
         global allowedMoves, roomAdjacencies
-        print(oldRoom.getRoomType())
-        newRoom = Room.roomAdjacencies[oldRoom.getRoomType()][action]
+        # print(oldRoom.getRoomType())
         
         canMove = True
+        newRoom = None # scope this
         # move validation
         if action not in Room.allowedMoves[oldRoom.getRoomType()]: # move is a valid direction?
             canMove = False
-        if newRoom > 10 and newRoom.getPlayers(): # is the hallway already occupied?
-            canMove = False
+        else: # if it is valid direction
+            newRoom = self.rooms[Room.roomAdjacencies[oldRoom.getRoomType()][action]] #lol kinda disgusting but whatever
+            if newRoom.getRoomType() > Room.RoomType.MAX_ROOM and newRoom.getPlayers(): # is the hallway already occupied?
+                canMove = False
         
         if canMove:
             newRoom.addPlayer(player)
-            oldRoom.removePlayer(player)                                 
+            oldRoom.removePlayer(player)
             return True
         else:
-            print("invalid move") # invalid move message - real message sent in Main.py
+            # prints on server
+            # print("invalid move") # invalid move message - real message sent in Main.py
             return False
+
+    def getWeapons(self):
+        '''
+        This function just returns a list of all weapons held by the Board instance.
+        '''
+        return self.weapons
+
+    def getRooms(self):
+        '''
+        This function just returns a list of all rooms held by the Board instance.
+        '''
+        return self.rooms
+
+    def getWeaponRoom(self, weapon):
+        for room in self.rooms:
+            #print(str(weapon) + " : " + str(room.getWeapons()))
+            if weapon in room.getWeapons():
+                return room
+        print('ERROR: Weapon was in none of the rooms')
+        exit()

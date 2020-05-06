@@ -35,6 +35,8 @@ class Cards():
         for i in range(21):
             allcards.append(i)
         self.deck = allcards
+        self.case_file = None
+        self.hands = None
     
     def CaseFile(self):
         roomnum = randint(0,8)
@@ -56,3 +58,9 @@ class Cards():
             for j in temphand:
                 hand.append(CardType(j).value)
             self.hands.append(hand)
+
+    def getCaseFile(self):
+        '''
+        This function returns the case file information
+        '''
+        return self.case_file

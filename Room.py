@@ -9,7 +9,7 @@ class WeaponType(IntEnum):
     WRENCH = 3
     CANDLESTICK = 4
     REVOLVER = 5
-    MAX_WEAPON = 6
+    # MAX_WEAPON = 6
 
 class RoomType(IntEnum):
     #ROOMS
