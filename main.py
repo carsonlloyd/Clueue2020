@@ -471,23 +471,37 @@ def parseMessage(jsonMessage):
             Message.send_false_accusation(playerAddresses[turn])
             p = players[0]
             p.setFailed()
-            
-            if mainBoard.getPlayerRoom(p).getRoomType() > Room.RoomType.MAX_ROOM:
-                in_hallway = True # if in hallway, move them
-            else:
-                in_hallway = False # otherwise no need to move them
 
-            if p in players and in_hallway:    # move player into a room so they are out of the hallway
-                # for now just go random, TODO move them to their starting room?
-                room = random.randint(0,8)
-                mainBoard.updatePlayerPos(p, room)
-                sendAll(Message.send_update_player_pos, {'player':str(p), 'pos':room})
+            # if there are NO players left, just END
+            isEnd = True
+            for x in players:
+                if not x.isFailed():
+                    isEnd = False
+            if isEnd:   # end game, end false message and game_won
+                sendAll(Message.send_game_win_accusation, {'client_id':client, 'suspect':False, 'weapon':False, 'room':False})
+                game_won = True
+            else:       # otherwise, continue on like normal
+                if mainBoard.getPlayerRoom(p).getRoomType() > Room.RoomType.MAX_ROOM:
+                    in_hallway = True # if in hallway, move them
+                else:
+                    in_hallway = False # otherwise no need to move them
+
+                if p in players and in_hallway:    # move player into a room so they are out of the hallway
+                    # for now just go random, TODO move them to their starting room?
+                    room = random.randint(0,8)
+                    mainBoard.updatePlayerPos(p, room)
+                    sendAll(Message.send_update_player_pos, {'player':str(p), 'pos':room})
     elif message_type == 'game_win_accusation':
         culprit = str(message['suspect'])
         weapon = str(message['weapon'])
         room = str(message['room'])
-        print("Game has been won: " + culprit + " in the " + room + " with the " + weapon)
-        # TODO display gui window with this information
+
+        if not cuplrit and not weapon and not room:
+            print("All players lost! Too bad!")
+            # TODO display gui window with this information
+        else:
+            print("Game has been won: " + culprit + " in the " + room + " with the " + weapon)
+            # TODO display gui window with this information
     elif message_type == 'false_accusation':
         print("Accusation was false.")
         Message.send_end_turn((ADDR,PORT), str(players[0]))
@@ -523,6 +537,8 @@ def getInput():
         return
     if players[0].isFailed(): # if failed, don't give a turn -- is this the right place for this?
         print("SKIPPING TURN")
+        incrementTurn()
+        Message.send_ready_for_turn(playerAddresses[turn])
         isTurn = False
         return
 
