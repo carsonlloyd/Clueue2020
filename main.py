@@ -241,7 +241,7 @@ def parseMessage(jsonMessage):
     Feel free to break out anything into functions, I'll probably do that later for most of this
     to make it look less gross
     '''
-    global isTurn, gameStarted, updated, turn, HOST, playerNames
+    global isTurn, gameStarted, updated, turn, HOST, playerNames, game_won
     message = json.loads(jsonMessage)
     message_type = message['message_type']
     if message_type == 'player_connected':
@@ -449,7 +449,7 @@ def parseMessage(jsonMessage):
                 room = input_val
         Message.send_accusation_made((ADDR,PORT), str(players[0]), suspect, weapon, room)
     elif message_type == 'accusation_made' and HOST:
-        global cards
+        global cards, game_won
         client = message['client_id']
         suspect = message['suspect']
         weapon = message['weapon']
@@ -471,6 +471,7 @@ def parseMessage(jsonMessage):
             Message.send_false_accusation(playerAddresses[turn])
 
             p = players[turn] # PLAYER WHO WAS WRONG
+            p.setFailed()
 
             # if there are NO players left, just END
             isEnd = True
@@ -497,12 +498,14 @@ def parseMessage(jsonMessage):
         weapon = str(message['weapon'])
         room = str(message['room'])
 
-        if not cuplrit and not weapon and not room:
+        if culprit == 'False' and weapon == 'False' and room == 'False':
             print("All players lost! Too bad!")
             # TODO display gui window with this information
         else:
             print("Game has been won: " + culprit + " in the " + room + " with the " + weapon)
             # TODO display gui window with this information
+
+        game_won = True
     elif message_type == 'false_accusation':
         print("Accusation was false.")
         p = players[0]
@@ -538,11 +541,10 @@ def getInput():
     global isTurn, players
     if not isTurn:
         return
-    if players[0].isFailed(): # if failed, don't give a turn -- is this the right place for this?
+    if players[0].isFailed(): # if failed, don't give a turn
         print("SKIPPING TURN")
         isTurn = False
 
-        # TODO - need to somehow tell server to increment turn and set turn to next player?
         Message.send_end_turn((ADDR,PORT), str(players[0]))
 
         return
