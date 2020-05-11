@@ -469,12 +469,17 @@ def parseMessage(jsonMessage):
             # go on to display message to clients
         else:
             Message.send_false_accusation(playerAddresses[turn])
-            # go on to display message to client
+            p = getPlayerFromName(client)
+            p.setFailed()
+            if p in players:    # move player into a room so they are out of the way
+                mainBoard.updatePlayerPos(p, room.getRoomType())
+                sendAll(Message.send_update_player_pos, {'player':str(p), 'pos':room.getRoomType()})
     elif message_type == 'game_win_accusation':
         culprit = str(message['suspect'])
         weapon = str(message['weapon'])
         room = str(message['room'])
         print("Game has been won: " + culprit + " in the " + room + " with the " + weapon)
+        # TODO display gui window with this information
     elif message_type == 'false_accusation':
         print("Accusation was false.")
         Message.send_end_turn((ADDR,PORT), str(players[0]))
