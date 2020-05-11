@@ -514,12 +514,12 @@ def getInput():
     them into their sequence and relevance.
     Input messages from players whose turn it is not will be ignored
     '''
-    global isTurn
+    global isTurn, players
     if not isTurn:
         return
     global validInputs
     action = ''
-    while action not in validInputs:
+    while action not in validInputs and not players[0].isFailed(): # is this the right place to exclude a failed player from making a move?
         action = input('Please select an action (up, down, left, right, secret, help): ')
 
     isTurn = False
@@ -589,6 +589,7 @@ def main():
         render()
 
     # game_won = True, what else? cleanup? TODO
+    print("GAME_WON = True")
 
     selector.close()
 
