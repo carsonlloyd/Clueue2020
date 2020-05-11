@@ -214,7 +214,7 @@ def cardToString(cards):
             val = 'Mrs. White'
         elif card == 14:
             val = 'Mrs. Peacock'
-        elif card > 14:
+        elif card == 14:
             val = 'Rope'
         elif card == 16:
             val = 'Lead pipe'
