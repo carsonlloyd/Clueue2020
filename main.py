@@ -661,7 +661,7 @@ def main():
                     IMAGESDICT['plumplayer'],
                     IMAGESDICT['peacockplayer']]
 
-    #game_intro(DISPLAYSURF, clock)
+    game_intro(DISPLAYSURF, clock)
 
     initialize(DISPLAYSURF, PLAYERIMAGES, clock)
 
@@ -673,13 +673,11 @@ def main():
                 pygame.quit()
                 sys.exit()
                 game_won = True
+        action = getInput()
+        update(action)
+        render()
         pygame.display.update()
 
-    #global game_won
-    #while not game_won:
-    #    action = getInput()
-    #    update(action)
-    #    render()
 
     # game_won = True, what else? cleanup? TODO
 
