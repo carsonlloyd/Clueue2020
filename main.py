@@ -469,8 +469,8 @@ def parseMessage(jsonMessage):
             # go on to display message to clients
         else:
             Message.send_false_accusation(playerAddresses[turn])
-            p = players[0]
-            p.setFailed()
+
+            p = players[turn] # TODO PLAYER WHO WAS WRONG
 
             # if there are NO players left, just END
             isEnd = True
@@ -504,6 +504,8 @@ def parseMessage(jsonMessage):
             # TODO display gui window with this information
     elif message_type == 'false_accusation':
         print("Accusation was false.")
+        p = players[0]
+        p.setFailed()
         Message.send_end_turn((ADDR,PORT), str(players[0]))
     elif message_type == 'end_turn' and HOST and message['client_id'] == str(players[turn]):
         incrementTurn()
