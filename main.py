@@ -470,13 +470,14 @@ def parseMessage(jsonMessage):
         else:
             Message.send_false_accusation(playerAddresses[turn])
 
-            p = players[turn] # TODO PLAYER WHO WAS WRONG
+            p = players[turn] # PLAYER WHO WAS WRONG
 
             # if there are NO players left, just END
             isEnd = True
             for x in players:
                 if not x.isFailed():
                     isEnd = False
+
             if isEnd:   # end game, end false message and game_won
                 sendAll(Message.send_game_win_accusation, {'client_id':client, 'suspect':False, 'weapon':False, 'room':False})
                 game_won = True
@@ -539,9 +540,11 @@ def getInput():
         return
     if players[0].isFailed(): # if failed, don't give a turn -- is this the right place for this?
         print("SKIPPING TURN")
-        incrementTurn()
-        Message.send_ready_for_turn(playerAddresses[turn])
         isTurn = False
+
+        # TODO - need to somehow tell server to increment turn and set turn to next player?
+        Message.send_end_turn((ADDR,PORT), str(players[0]))
+
         return
 
     global validInputs
