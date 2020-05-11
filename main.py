@@ -472,9 +472,13 @@ def parseMessage(jsonMessage):
             p = players[0]
             p.setFailed()
             
-            # TODO - move them into their starting room? or pick a valid room
-            if p in players:    # move player into a room so they are out of the way
-                # for now just go random
+            if mainBoard.getPlayerRoom(player).getRoomType() > Room.RoomType.MAX_ROOM:
+                in_hallway = True # if in hallway, move them
+            else:
+                in_hallway = False # otherwise no need to move them
+
+            if p in players and in_hallway:    # move player into a room so they are out of the hallway
+                # for now just go random, TODO move them to their starting room?
                 room = random.randint(0,8)
                 mainBoard.updatePlayerPos(p, room)
                 sendAll(Message.send_update_player_pos, {'player':str(p), 'pos':room})
