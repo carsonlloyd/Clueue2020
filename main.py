@@ -521,9 +521,12 @@ def getInput():
     global isTurn, players
     if not isTurn:
         return
+    if players[0].isFailed(): # if failed, don't give a turn -- is this the right place for this?
+        return
+        
     global validInputs
     action = ''
-    while action not in validInputs and not players[0].isFailed(): # is this the right place to exclude a failed player from making a move?
+    while action not in validInputs: 
         action = input('Please select an action (up, down, left, right, secret, help): ')
 
     isTurn = False
