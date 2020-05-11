@@ -472,7 +472,7 @@ def parseMessage(jsonMessage):
             p = players[0]
             p.setFailed()
             
-            if mainBoard.getPlayerRoom(player).getRoomType() > Room.RoomType.MAX_ROOM:
+            if mainBoard.getPlayerRoom(p).getRoomType() > Room.RoomType.MAX_ROOM:
                 in_hallway = True # if in hallway, move them
             else:
                 in_hallway = False # otherwise no need to move them
@@ -522,8 +522,10 @@ def getInput():
     if not isTurn:
         return
     if players[0].isFailed(): # if failed, don't give a turn -- is this the right place for this?
+        print("SKIPPING TURN")
+        isTurn = False
         return
-        
+
     global validInputs
     action = ''
     while action not in validInputs: 
