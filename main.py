@@ -469,11 +469,15 @@ def parseMessage(jsonMessage):
             # go on to display message to clients
         else:
             Message.send_false_accusation(playerAddresses[turn])
-            p = getPlayerFromName(client)
+            p = players[0]
             p.setFailed()
+            
+            # TODO - move them into their starting room? or pick a valid room
             if p in players:    # move player into a room so they are out of the way
-                mainBoard.updatePlayerPos(p, room.getRoomType())
-                sendAll(Message.send_update_player_pos, {'player':str(p), 'pos':room.getRoomType()})
+                # for now just go random
+                room = random.randint(0,8)
+                mainBoard.updatePlayerPos(p, room)
+                sendAll(Message.send_update_player_pos, {'player':str(p), 'pos':room})
     elif message_type == 'game_win_accusation':
         culprit = str(message['suspect'])
         weapon = str(message['weapon'])
