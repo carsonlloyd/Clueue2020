@@ -125,12 +125,12 @@ allowedMoves = {
     21: ['left', 'right'],
 
     #ROOMS
-    'GREEN_HS': ['up']
-    'MUSTARD_HS': ['left']
-    'SCARLET_HS':['down']
-    'PLUM_HS':['right']
-    'WHITE_HS':['up']
-    'PEACOCK_HS':['right']
+    'GREEN_HS': ['up'],
+    'MUSTARD_HS': ['left'],
+    'SCARLET_HS':['down'],
+    'PLUM_HS':['right'],
+    'WHITE_HS':['up'],
+    'PEACOCK_HS':['right'],
     'STUDY': ['right','down','secret'],
     'HALL': ['right','down','left'],
     'LOUNGE': ['left', 'down', 'secret'],
