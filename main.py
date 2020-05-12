@@ -303,7 +303,7 @@ def initGUI():
     global clock, DISPLAYSURF, black, white, IMAGESDICT
     pygame.init()
     clock = pygame.time.Clock()
-    DISPLAYSURF = pygame.display.set_mode((1100, 720)) #board is 960x720. action bar is 720x240
+    DISPLAYSURF = pygame.display.set_mode((1400, 720)) #board is 960x720. action bar is 1100,720. detectivecard is 1400,720
     pygame.display.set_caption('Clueless')
     black = (0,0,0)
     white = (255,255,255)
@@ -342,6 +342,7 @@ def parseMessage(jsonMessage):
     if message_type == 'player_connected':
         players[0].setName(message['connected_client'])
         playerstring = getPlayerBySymbol(message['connected_client']).getName()
+        pygame.draw.rect(DISPLAYSURF, (255, 255, 255), (960,540,1100,560))
         print('You will be playing as ' + playerstring + "\n")
     elif message_type == 'player_positions' and not HOST:
         setPositions(message['positions'])
@@ -354,7 +355,9 @@ def parseMessage(jsonMessage):
         isTurn = True
     elif message_type == 'card_set':
         players[0].setHand([Cards.CardType(c) for c in message['cards']])
-        #print('\nYour cards are: ' + str([card.name for card in players[0].getHand()]) + "\n")
+        for card in players[0].getHand():
+            Cards.detectiveCard[cardToString([card])[0]] = True #absolutely disgusting
+        print('\nYour cards are: ' + str([card.name for card in players[0].getHand()]) + "\n")
     elif message_type == 'player_move' and HOST:
         player = getPlayerBySymbol(message['player'])
         if mainBoard.movePlayer(player, message['direction']):
@@ -516,6 +519,8 @@ def parseMessage(jsonMessage):
     elif message_type == 'disprove_notify':
         # show suggester what disproved them
         eg.msgbox("You were disproved with card: " + message['pick'])
+        Cards.detectiveCard[message['pick']] = True
+        print("DISPROVE" + str(message['pick']))
         Message.send_end_turn((ADDR,PORT), str(players[0]))
     elif message_type == 'make_accusation':
         #print("Make accusation: ")
@@ -705,6 +710,7 @@ def render():
     #button( "Suggest",980,150,100,40,(100,100,100), action=lambda: parseAction('suggest'))
     #button( "Accuse",980,190,100,40,(100,100,100), action=lambda: parseAction('accuse'))
 
+    #turn notification
     myfont = pygame.font.SysFont("monospace", 20, (0,255,0))
     if isTurn:
         #smallText = pygame.font.Font("freesansbold.ttf",20, (0,255,0))
@@ -726,6 +732,23 @@ def render():
     textRect.center = ( (960+(70)), (550) )
     DISPLAYSURF.blit(textSurf, textRect)
 
+    #detectiveCard
+
+    x=1100
+    y=20
+    w=200
+    h=20
+    for key,val in Cards.detectiveCard.items():
+        if val:
+            pygame.draw.rect(DISPLAYSURF, (150, 0, 0),(x,y,w,h))
+        else:
+            pygame.draw.rect(DISPLAYSURF, (0, 150, 0),(x,y,w,h))
+        smallText = pygame.font.Font("freesansbold.ttf",20)
+        textSurf, textRect = text_objects(key, smallText)
+        textRect.center = ( (x+(w/2)), (y+(h/2)) )
+        DISPLAYSURF.blit(textSurf, textRect)
+        y+= h 
+
     pygame.display.update()
     if not updated:
         return
@@ -736,8 +759,6 @@ def render():
     # os.system('cls' if os.name == 'nt' else 'clear') # comment out to stop clearing screen
     # mainBoard.draw() # not needed any more? used to be for console printing?
     updated = False
-    
-
 
 def main():
     '''

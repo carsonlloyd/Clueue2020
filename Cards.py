@@ -1,5 +1,6 @@
 from enum import IntEnum
 from random import randint, shuffle
+import collections
 
 class CardType(IntEnum):
     #rooms
@@ -28,6 +29,29 @@ class CardType(IntEnum):
     WRENCH = 18
     CANDLESTICK = 19
     REVOLVER = 20
+
+detectiveCard = collections.OrderedDict(
+            {'Study': False,
+            'Hall': False,
+            'Lounge': False,
+            'Library': False,
+            'Billiard room': False,
+            'Dining room': False,
+            'Conservatory': False,
+            'Ballroom': False,
+            'Kitchen': False,
+            'Col. Mustard': False,
+            'Miss Scarlet': False,
+            'Prof. Plum': False,
+            'Mr. Green': False,
+            'Mrs. White': False,
+            'Mrs. Peacock': False,
+            'Rope': False,
+            'Lead pipe': False,
+            'Knife': False,
+            'Wrench': False,
+            'Candlestick': False,
+            'Revolver': False })
 
 class Cards():
     def __init__(self):
