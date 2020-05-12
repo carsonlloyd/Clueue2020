@@ -661,6 +661,7 @@ def main():
     # game_intro(DISPLAYSURF, clock) # not taking player input any more, to simplify and get this working, skip this
 
     initialize(DISPLAYSURF, PLAYERIMAGES, clock)
+    mainBoard.updatePlayerLocationsOnBoard()
 
 
     global game_won

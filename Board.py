@@ -39,29 +39,29 @@ class Board:
 
         # MINUS 6 HERE - index 0 = -6 room type number enum
         self.abs_pos = [
-                {'x': 170, 'y':185}, #STUDY = 0
-                {'x': 480, 'y':185}, #HALL = 1
-                {'x': 790, 'y':185}, #LOUNGE = 2
-                {'x': 170, 'y':400}, #LIBRARY = 3
-                {'x': 480, 'y':400}, #BILLIARD_ROOM = 4
-                {'x': 790, 'y':400}, #DINING_ROOM = 5
-                {'x': 170, 'y':600}, #CONSERVATORY = 6
-                {'x': 480, 'y':600}, #BALL_ROOM = 7
-                {'x': 790, 'y':600}, #KITCHEN = 8
+                {'x': 125, 'y':130}, #STUDY = 0
+                {'x': 435, 'y':130}, #HALL = 1
+                {'x': 745, 'y':130}, #LOUNGE = 2
+                {'x': 125, 'y':332}, #LIBRARY = 3
+                {'x': 435, 'y':332}, #BILLIARD_ROOM = 4
+                {'x': 745, 'y':332}, #DINING_ROOM = 5
+                {'x': 125, 'y':542}, #CONSERVATORY = 6
+                {'x': 435, 'y':542}, #BALL_ROOM = 7
+                {'x': 745, 'y':542}, #KITCHEN = 8
                 {'x': 0, 'y':0}, #MAX_ROOM = 9
 
-                {'x': 330, 'y':150}, #H_STUDY_HALL = 10
-                {'x': 650, 'y':150}, #H_HALL_LOUNGE = 11
-                {'x': 170, 'y':250}, #H_STUDY_LIBRARY = 12
-                {'x': 480, 'y':250}, #H_HALL_BILLIARD_ROOM = 13
-                {'x': 790, 'y':250}, #H_LOUNGE_DINING_ROOM = 14
-                {'x': 330, 'y':360}, #H_LIBRARY_BILLIARD_ROOM = 15
-                {'x': 640, 'y':360}, #H_BILLIARD_ROOM_DINING_ROOM = 16
-                {'x': 170, 'y':475}, #H_LIBRARY_CONSERVATORY = 17
-                {'x': 480, 'y':475}, #H_BILLIARD_ROOM_BALL_ROOM = 18
-                {'x': 790, 'y':475}, #H_DINING_ROOM_KITCHEN = 19
-                {'x': 330, 'y':580}, #H_CONSERVATORY_BALL_ROOM = 20
-                {'x': 640, 'y':580}  #H_BALL_ROOM_KITCHEN = 21
+                {'x': 300, 'y':125}, #H_STUDY_HALL = 10
+                {'x': 600, 'y':125}, #H_HALL_LOUNGE = 11
+                {'x': 150, 'y':230}, #H_STUDY_LIBRARY = 12
+                {'x': 450, 'y':230}, #H_HALL_BILLIARD_ROOM = 13
+                {'x': 750, 'y':230}, #H_LOUNGE_DINING_ROOM = 14
+                {'x': 300, 'y':335}, #H_LIBRARY_BILLIARD_ROOM = 15
+                {'x': 600, 'y':335}, #H_BILLIARD_ROOM_DINING_ROOM = 16
+                {'x': 150, 'y':440}, #H_LIBRARY_CONSERVATORY = 17
+                {'x': 450, 'y':440}, #H_BILLIARD_ROOM_BALL_ROOM = 18
+                {'x': 750, 'y':440}, #H_DINING_ROOM_KITCHEN = 19
+                {'x': 300, 'y':545}, #H_CONSERVATORY_BALL_ROOM = 20
+                {'x': 600, 'y':545}  #H_BALL_ROOM_KITCHEN = 21
             ]
 
     def draw(self, img, x,y):
@@ -77,19 +77,19 @@ class Board:
         self.board.blit(boardimg,(0,0))
 
         for room in self.rooms:
-            players_inside = room.getPlayers()
-            
             layer = 10
-            coords = self.abs_pos[room.getRoomType()-6]
-            x = coords['x'] - layer
+            coords = self.abs_pos[room.getRoomType()]
+            x = coords['x'] #- layer
             y = coords['y'] 
 
+
+            players_inside = room.getPlayers()
             for player in players_inside:
                 self.avatarposx[str(player)] = x
                 self.avatarposy[str(player)] = y
-                x += layer
+                #x += layer
 
-                self.board.blit(images[str(player)], (self.avatarposx[str(player)]-10, self.avatarposy[str(player)]-10))                
+                self.board.blit(images[str(player)], (self.avatarposx[str(player)] + 15, self.avatarposy[str(player)] + 40))
 
     def getPlayerRoom(self, player):
         for room in self.rooms:
