@@ -73,13 +73,13 @@ class Board:
         players currently are
         Works by making a list of the characters symbols and then padding to the desired size
         '''
-        # print(action)
+
         self.board.blit(boardimg,(0,0))
 
         for room in self.rooms:
-            layer = 10
+            layer = 30
             coords = self.abs_pos[room.getRoomType()]
-            x = coords['x'] #- layer
+            x = coords['x'] - layer
             y = coords['y'] 
 
 
@@ -87,7 +87,7 @@ class Board:
             for player in players_inside:
                 self.avatarposx[str(player)] = x
                 self.avatarposy[str(player)] = y
-                #x += layer
+                x += layer
 
                 self.board.blit(images[str(player)], (self.avatarposx[str(player)] + 15, self.avatarposy[str(player)] + 40))
 

@@ -313,6 +313,7 @@ def parseMessage(jsonMessage):
         updated = True
         gameStarted = True
         print('game started')
+        mainBoard.updatePlayerLocationsOnBoard()
     elif message_type == 'ready_for_turn':
         isTurn = True
     elif message_type == 'card_set':
@@ -661,8 +662,6 @@ def main():
     # game_intro(DISPLAYSURF, clock) # not taking player input any more, to simplify and get this working, skip this
 
     initialize(DISPLAYSURF, PLAYERIMAGES, clock)
-    mainBoard.updatePlayerLocationsOnBoard()
-
 
     global game_won
     while not game_won:
