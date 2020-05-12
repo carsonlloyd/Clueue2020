@@ -7,6 +7,7 @@ from typing import List, Dict
 import message_drivers as Message
 import pygame
 from pygame.locals import *
+import easygui as eg
 
 #########################################################################
 # This is all networking garbage, you probably dont want this
@@ -17,13 +18,13 @@ def initNetwork(numPlayers):
     if HOST:
         server_socket.bind((ADDR, PORT))
         server_socket.listen() #add num_players for max socket count
-        print('listening on ', (ADDR,PORT))
+        # print('listening on ', (ADDR,PORT))
         server_socket.setblocking(False)
         selector.register(server_socket,selectors.EVENT_READ, data=None)
-        print('server started, waiting for clients...')
+        print('Host server started, waiting for clients...')
         cards = Cards.Cards()
         casefile = cards.CaseFile()
-        # print(str(cards.getCaseFile()))
+        print(str(cards.getCaseFile())) # FOR DEBUGGING/TESTING
         cards.shufflecards()
         cards.deal(numPlayers)
         hands = cards.hands
@@ -46,7 +47,7 @@ def accept_wrapper(sock):
     global playerAddresses, hands, characters
     playerAddresses[len(playerAddresses)] = addr
     messages[addr] = []
-    print('accepted connection from: ', addr)
+    print('[server] Accepting client connection from: ', addr)
     conn.setblocking(False)
     data = types.SimpleNamespace(connid=addr, inb=b'', outb=b'')
     events = selectors.EVENT_READ | selectors.EVENT_WRITE
@@ -109,7 +110,7 @@ def service_connection(key, mask):
 def start_connections(host, port, num_conns=1):
     global messages
     server_addr = (host,port)
-    print('starting connection ' + ' to ' + str(server_addr))
+    # print('starting connection ' + ' to ' + str(server_addr))
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.setblocking(False)
     sock.connect_ex(server_addr)
@@ -134,14 +135,18 @@ def initPlayers(numPlayers):
             mainBoard.rooms[roomIdx].addPlayer(players[playerIdx]) #kinda bad encapsulation but thats pythons fault
 
     mainBoard.updatePlayerLocationsOnBoard()
-    pygame.display.update()
+    # pygame.display.update()
 
 def button(msg,x,y,w,h,ac, action = None):
+    global isTurn
     mouse = pygame.mouse.get_pos()
     click = pygame.mouse.get_pressed()
 
-    if x+w > mouse[0] > x and y+h > mouse[1] > y:
-        pygame.draw.rect(DISPLAYSURF, ac,(x,y,w,h))
+    if not isTurn:
+        pygame.draw.rect(DISPLAYSURF, (ac[0]+100, ac[1]+100, ac[2]+100),(x,y,w,h))
+
+    elif x+w > mouse[0] > x and y+h > mouse[1] > y:
+        pygame.draw.rect(DISPLAYSURF, (ac[0]+10, ac[1]+10, ac[2]+10),(x,y,w,h))
         if click[0] == 1 and action !=None:
                 action()
     else:
@@ -168,7 +173,7 @@ def game_intro(DISPLAYSURF, clock):
     intro = True
     while intro:
         for event in pygame.event.get():
-            print(event)
+            # print(event)
             if event.type == pygame.QUIT:
                 pygame.quit()
                 quit()
@@ -195,7 +200,7 @@ def initialize(DISPLAYSURF, PLAYERIMAGES, clock):
     Initialize game board
     '''
     global mainBoard
-    print('initializing')
+    # print('initializing')
 
     mainBoard = Board(DISPLAYSURF, PLAYERIMAGES)
     #randomly place players
@@ -220,10 +225,10 @@ def setPositions(positions):
     count = 1
     for key, value in positions.items():
         if key == str(players[0]):
-            print('adding myself (' + str(key) + ') to ' + str(Room.RoomType(value)))
+            # print('adding myself (' + str(key) + ') to ' + str(Room.RoomType(value)))
             mainBoard.rooms[value].addPlayer(players[0])
         else:
-            print('adding ' + str(key) + ' to ' + str(Room.RoomType(value)))
+            # print('adding ' + str(key) + ' to ' + str(Room.RoomType(value)))
             players[count].setName(key)
             mainBoard.rooms[value].addPlayer(players[count])
             count += 1
@@ -274,7 +279,7 @@ def cardToString(cards):
             val = 'Mrs. White'
         elif card == 14:
             val = 'Mrs. Peacock'
-        elif card > 14:
+        elif card == 15:
             val = 'Rope'
         elif card == 16:
             val = 'Lead pipe'
@@ -294,6 +299,36 @@ def incrementTurn():
     turn += 1
     turn %= numPlayers
 
+def initGUI():
+    global clock, DISPLAYSURF, black, white, IMAGESDICT
+    pygame.init()
+    clock = pygame.time.Clock()
+    DISPLAYSURF = pygame.display.set_mode((1100, 720)) #board is 960x720. action bar is 720x240
+    pygame.display.set_caption('Clueless')
+    black = (0,0,0)
+    white = (255,255,255)
+    DISPLAYSURF.fill(white)
+
+    IMAGESDICT = {'gameboard': pygame.image.load('gameboard.png'),
+                  'greenplayer': pygame.image.load('green.png'),
+                  'mustardplayer': pygame.image.load('mustard.png'),
+                  'scarletplayer': pygame.image.load('scarlett.png'),
+                  'whiteplayer': pygame.image.load('white.png'),
+                  'plumplayer': pygame.image.load('plum.png'),
+                  'peacockplayer': pygame.image.load('peacock.png')}
+
+    currentImage = 0
+    PLAYERIMAGES = [IMAGESDICT['greenplayer'],
+                    IMAGESDICT['mustardplayer'],
+                    IMAGESDICT['scarletplayer'],
+                    IMAGESDICT['whiteplayer'],
+                    IMAGESDICT['plumplayer'],
+                    IMAGESDICT['peacockplayer']]
+
+    # game_intro(DISPLAYSURF, clock) # not taking player input any more, to simplify and get this working, skip this
+
+    initialize(DISPLAYSURF, PLAYERIMAGES, clock)
+
 def parseMessage(jsonMessage):
     '''
     Receives message as bytes from the socket. Must be converted to a readable JSON format
@@ -301,24 +336,25 @@ def parseMessage(jsonMessage):
     Feel free to break out anything into functions, I'll probably do that later for most of this
     to make it look less gross
     '''
-    global isTurn, gameStarted, updated, turn, HOST, playerNames
+    global isTurn, gameStarted, updated, turn, HOST, playerNames, game_won
     message = json.loads(jsonMessage)
     message_type = message['message_type']
     if message_type == 'player_connected':
         players[0].setName(message['connected_client'])
-        print('You will be playing as ' + message['connected_client'])
+        playerstring = getPlayerBySymbol(message['connected_client']).getName()
+        print('You will be playing as ' + playerstring + "\n")
     elif message_type == 'player_positions' and not HOST:
         setPositions(message['positions'])
     elif message_type == 'start_game':
         updated = True
         gameStarted = True
-        print('game started')
+        print('Game starting...\n\n')
         mainBoard.updatePlayerLocationsOnBoard()
     elif message_type == 'ready_for_turn':
         isTurn = True
     elif message_type == 'card_set':
         players[0].setHand([Cards.CardType(c) for c in message['cards']])
-        print('Your cards are: ' + str([card.name for card in players[0].getHand()]))
+        #print('\nYour cards are: ' + str([card.name for card in players[0].getHand()]) + "\n")
     elif message_type == 'player_move' and HOST:
         player = getPlayerBySymbol(message['player'])
         if mainBoard.movePlayer(player, message['direction']):
@@ -349,26 +385,21 @@ def parseMessage(jsonMessage):
                 Message.send_end_turn((ADDR,PORT), str(player))
         mainBoard.updatePlayerLocationsOnBoard()
     elif message_type == 'make_suggestion':
-        print("Make suggestion: ")
+        #print("Make a suggestion: ")
         available_suspects = message['suspects']
         available_weapons = message['weapons']
-        # TODO present gui for player to make suggestion
         # suspect,weapon = suggestion details from player
         suspect = weapon = None
+
         while suspect == None:
-            string = "Choose a suspect (" + str(available_suspects) + "): "
-            input_val = input(string)
-            if input_val in available_suspects:
-                suspect = input_val
+            string = "Choose a suspect:"
+            suspect = eg.buttonbox(string, choices=available_suspects)
+
         while weapon == None:
-            string = "Choose a weapon (" + str([Room.WeaponType(x).name for x in available_weapons]) + "): "
-            input_val = input(string)
-            try:
-                input_val = Room.WeaponType[input_val].value
-                if input_val in available_weapons:
-                    weapon = input_val
-            except KeyError:
-                pass
+            string = "Choose a weapon:"
+            input_val = eg.indexbox(string, choices=[Room.WeaponType(x).name for x in available_weapons])
+            if input_val in available_weapons:
+                weapon = input_val
             
         Message.send_suggestion((ADDR,PORT), str(players[turn]), suspect, weapon) # this is for sending to host server right?
     elif message_type == 'suggestion':
@@ -452,25 +483,31 @@ def parseMessage(jsonMessage):
         if not disproved:
             #print("NOT DISPROVED")
             # allow accusation
-            available_suspects = playerNames
-            available_weapons = mainBoard.getWeapons()
-            available_rooms = [r.getRoomType() for r in mainBoard.getRooms() if r.getPlayers() and r.getRoomType() < Room.RoomType.MAX_ROOM] # list rooms, from board's rooms if room has player(s)
-            Message.send_make_accusation(playerAddresses[turn], available_suspects, available_weapons, available_rooms)
+            accuse = eg.ynbox("You were not disproved. Do you want to make an accusation?")
+            if accuse:
+                available_suspects = playerNames
+                available_weapons = mainBoard.getWeapons()
+                available_rooms = [r.getRoomType() for r in mainBoard.getRooms() if r.getPlayers() and r.getRoomType() < Room.RoomType.MAX_ROOM] # list rooms, from board's rooms if room has player(s)
+                Message.send_make_accusation(playerAddresses[turn], available_suspects, available_weapons, available_rooms)
+            else:
+                Message.send_end_turn((ADDR,PORT), str(players[0]))
+
 
     elif message_type == 'cannot_suggest':
         pass #TODO
     elif message_type == 'make_disprove':
-        print("Make disprove: ")
         matches = message['matches'] # these are CardType enums
         # allow player to choose which match to send back
         matches = cardToString(matches)
 
+        #print("Suggestion: " + str(matches))
+
         choice = None
         while choice == None:
-            string = "Choose a card (" + str(matches) + "): "
-            input_val = input(string)
+            input_val = eg.buttonbox("Suggestion: " + str(matches) + "\nChoose a card from your hand which can disprove the suggestion:", choices=matches)
             if input_val in matches:
                 choice = input_val
+
         Message.send_disprove_made((ADDR,PORT), message['client_id'], choice)
     elif message_type == 'disprove_made':
         # TELL CLIENT
@@ -478,10 +515,10 @@ def parseMessage(jsonMessage):
         pass
     elif message_type == 'disprove_notify':
         # show suggester what disproved them
-        print("DISPROVED: " + message['pick'])
+        eg.msgbox("You were disproved with card: " + message['pick'])
         Message.send_end_turn((ADDR,PORT), str(players[0]))
     elif message_type == 'make_accusation':
-        print("Make accusation: ")
+        #print("Make accusation: ")
         available_suspects = message['suspects']
         available_weapons = message['weapons']
         available_rooms = message['rooms']
@@ -490,28 +527,26 @@ def parseMessage(jsonMessage):
             available_rooms[i] = Room.RoomType(available_rooms[i]).name
         # allow player to choose
         suspect = weapon = room = None
+
         while suspect == None:
-            string = "Choose a suspect (" + str(available_suspects) + "): "
-            input_val = input(string)
+            input_val = eg.buttonbox("Choose a suspect:", choices=available_suspects)
             if input_val in available_suspects:
                 suspect = input_val
+
         while weapon == None:
-            string = "Choose a weapon (" + str([Room.WeaponType(x).name for x in available_weapons]) + "): "
-            input_val = input(string)
-            try:
-                input_val = Room.WeaponType[input_val].value
-                if input_val in available_weapons:
-                    weapon = input_val
-            except KeyError:
-                pass
+            string = "Choose a weapon:"
+            input_val = eg.indexbox(string, choices=[Room.WeaponType(x).name for x in available_weapons])
+            if input_val in available_weapons:
+                weapon = input_val
+
         while room == None:
-            string = "Choose a room (" + str(available_rooms) + "): "
-            input_val = input(string)
+            input_val = eg.buttonbox("Choose a room:", choices=available_rooms)
             if input_val in available_rooms:
                 room = input_val
+
         Message.send_accusation_made((ADDR,PORT), str(players[0]), suspect, weapon, room)
     elif message_type == 'accusation_made' and HOST:
-        global cards
+        global cards, game_won
         client = message['client_id']
         suspect = message['suspect']
         weapon = message['weapon']
@@ -525,27 +560,66 @@ def parseMessage(jsonMessage):
             if c.name == case_file['suspect']:
                 cf_suspect = cardToString([c])[0]
 
+        #print(suspect + ' ' + cf_suspect + ' ' + Room.WeaponType(weapon).name + ' ' + case_file['weapon'] + ' ' + room + ' ' + case_file['room'])
+        #print(str(suspect == cf_suspect) + ' ' + str(Room.WeaponType(weapon).name == case_file['weapon']) + ' ' + str(room == case_file['room']))
         if suspect == cf_suspect and Room.WeaponType(weapon).name == case_file['weapon'] and room == case_file['room']:
             sendAll(Message.send_game_win_accusation, {'client_id':client, 'suspect':suspect, 'weapon':case_file['weapon'], 'room':room})
-            game_won = True
+            #game_won = True # HAVE TO COMMENT THIS OUT - race condition?
             # go on to display message to clients
         else:
             Message.send_false_accusation(playerAddresses[turn])
-            # go on to display message to client
+
+            p = players[turn] # PLAYER WHO WAS WRONG
+            p.setFailed()
+
+            # if there are NO players left, just END
+            isEnd = True
+            for x in players:
+                if not x.isFailed():
+                    isEnd = False
+
+            if isEnd:   # end game, end false message and game_won
+                sendAll(Message.send_game_win_accusation, {'client_id':client, 'suspect':False, 'weapon':False, 'room':False})
+                # game_won = True
+            else:       # otherwise, continue on like normal
+                if mainBoard.getPlayerRoom(p).getRoomType() > Room.RoomType.MAX_ROOM:
+                    in_hallway = True # if in hallway, move them
+                else:
+                    in_hallway = False # otherwise no need to move them
+
+                if p in players and in_hallway:    # move player into a room so they are out of the hallway
+                    # for now just go random, TODO move them to their starting room?
+                    room = random.randint(0,8)
+                    mainBoard.updatePlayerPos(p, room)
+                    sendAll(Message.send_update_player_pos, {'player':str(p), 'pos':room})
     elif message_type == 'game_win_accusation':
         culprit = str(message['suspect'])
         weapon = str(message['weapon'])
         room = str(message['room'])
-        print("Game has been won: " + culprit + " in the " + room + " with the " + weapon)
+
+        if culprit == 'False' and weapon == 'False' and room == 'False':
+            #print("All players lost! Too bad!")
+            # TODO display gui window with this information
+            eg.msgbox("All players lost! Too bad! Game over.", ok_button="End Game")
+        else:
+            #print("Game has been won: " + culprit + " in the " + room + " with the " + weapon)
+            # TODO display gui window with this information
+            eg.msgbox("Game has been won: " + culprit + " in the " + room + " with the " + weapon, ok_button="End Game")
+
+        game_won = True
     elif message_type == 'false_accusation':
-        print("Accusation was false.")
+        eg.msgbox("Accusation was false. You cannot take any more turns!")
+        p = players[0]
+        p.setFailed()
         Message.send_end_turn((ADDR,PORT), str(players[0]))
     elif message_type == 'end_turn' and HOST and message['client_id'] == str(players[turn]):
         incrementTurn()
         Message.send_ready_for_turn(playerAddresses[turn])
-        
 
 def parseAction(action):
+    global isTurn
+    if not isTurn:
+        return
     if action in ['up','down','left','right','secret']:
         Message.send_player_move((ADDR,PORT), str(players[0]), action)
     elif action == 'help':
@@ -554,11 +628,11 @@ def parseAction(action):
         print('Keep in mind that only one player can occupy a hallway at a time and suggestions for a room must be made with you in that room\n')
         print('When you move into a room, you must make a suggestion, and one player will show you one card to disprove a part of your suggestion')
         print('On a players turn, if they correctly accuse the right person/room/weapon then they win the game!\n')
-        global isTurn
         isTurn = True
     elif action in ['suggest', 'accuse']:
         pass
         #do the other things
+    isTurn = False
 
 def getInput():
     '''
@@ -567,17 +641,24 @@ def getInput():
     them into their sequence and relevance.
     Input messages from players whose turn it is not will be ignored
     '''
-    global isTurn
+    global isTurn, players
     if not isTurn:
         return
+    if players[0].isFailed(): # if failed, don't give a turn
+        print("SKIPPING TURN")
+        isTurn = False
+
+        Message.send_end_turn((ADDR,PORT), str(players[0]))
+
+        return
+
     global validInputs
     action = ''
-    while action not in validInputs:
-        action = input('Please select an action (up, down, left, right, secret, help): ')
+    #while action not in validInputs:
+    #    action = input('Please select an action (up, down, left, right, secret, help): ')
 
-    isTurn = False
-    parseAction(action)
-
+    #isTurn = False
+    #parseAction(action)
 
     return action
 
@@ -615,7 +696,37 @@ def render():
 
     The host logic will disregard this function
     '''
-    global updated, gameStarted
+    global updated, gameStarted, isTurn
+
+    button( "U",1010,10,40,40,(100,100,100), action=lambda: parseAction('up'))
+    button( "L",986,52,40,40,(100,100,100), action=lambda: parseAction('left'))
+    button( "R",1034,52,40,40,(100,100,100), action=lambda: parseAction('right'))
+    button( "D",1010,93,40,40,(100,100,100), action=lambda: parseAction('down'))
+    #button( "Suggest",980,150,100,40,(100,100,100), action=lambda: parseAction('suggest'))
+    #button( "Accuse",980,190,100,40,(100,100,100), action=lambda: parseAction('accuse'))
+
+    myfont = pygame.font.SysFont("monospace", 20, (0,255,0))
+    if isTurn:
+        #smallText = pygame.font.Font("freesansbold.ttf",20, (0,255,0))
+
+        textSurf, textRect = text_objects("YOUR TURN", myfont)
+        textRect.center = ( (960+(70)), (300) )
+        DISPLAYSURF.blit(textSurf, textRect)
+
+    else:
+        #cover up the text with a white rectangle
+        pygame.draw.rect(DISPLAYSURF, (255, 255, 255), (960,280,1100,40))
+        
+    textSurf, textRect = text_objects("You are", myfont)
+    textRect.center = ( (960+(70)), (500) )
+    DISPLAYSURF.blit(textSurf, textRect)
+
+    myfont = pygame.font.SysFont("monospace", 15, (0,255,0))
+    textSurf, textRect = text_objects(players[0].name, myfont)
+    textRect.center = ( (960+(70)), (550) )
+    DISPLAYSURF.blit(textSurf, textRect)
+
+    pygame.display.update()
     if not updated:
         return
     if not gameStarted:
@@ -635,35 +746,8 @@ def main():
     Update will change the game state (or process state update message as client)
     Render will draw all graphical items based on that state (no render for host)
     '''
-    global clock, DISPLAYSURF, black, white, IMAGESDICT
-    pygame.init()
-    clock = pygame.time.Clock()
-    DISPLAYSURF = pygame.display.set_mode((960, 720))
-    pygame.display.set_caption('Clueless')
-    black = (0,0,0)
-    white = (255,255,255)
-    DISPLAYSURF.fill(white)
 
-    IMAGESDICT = {'gameboard': pygame.image.load('gameboard.png'),
-                  'greenplayer': pygame.image.load('green.png'),
-                  'mustardplayer': pygame.image.load('mustard.png'),
-                  'scarletplayer': pygame.image.load('scarlett.png'),
-                  'whiteplayer': pygame.image.load('white.png'),
-                  'plumplayer': pygame.image.load('plum.png'),
-                  'peacockplayer': pygame.image.load('peacock.png')}
-
-    currentImage = 0
-    PLAYERIMAGES = [IMAGESDICT['greenplayer'],
-                    IMAGESDICT['mustardplayer'],
-                    IMAGESDICT['scarletplayer'],
-                    IMAGESDICT['whiteplayer'],
-                    IMAGESDICT['plumplayer'],
-                    IMAGESDICT['peacockplayer']]
-
-    # game_intro(DISPLAYSURF, clock) # not taking player input any more, to simplify and get this working, skip this
-
-    initialize(DISPLAYSURF, PLAYERIMAGES, clock)
-
+    initGUI()
     global game_won
     while not game_won:
         for event in pygame.event.get():
@@ -674,9 +758,10 @@ def main():
         action = getInput()
         update(action)
         render()
-        pygame.display.update()
 
     # game_won = True, what else? cleanup? TODO
+    # FIX HERE - game just closes when won - would be okay if just running command line
+    print("Game over... play again!")
 
     selector.close()
 
@@ -687,6 +772,6 @@ if __name__ == "__main__":
     results = parser.parse_args()
     global HOST
     HOST = results.host
-    print('HOST:' + str(HOST))
+    # print('HOST:' + str(HOST))
 
     main()

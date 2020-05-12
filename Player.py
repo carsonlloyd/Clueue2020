@@ -5,6 +5,7 @@ class Player():
         self.name = name
         self.addr = None
         self.hand = None
+        self.failed = False
 
     def __str__(self):
         if self.name == 'Col. Mustard':
@@ -48,3 +49,9 @@ class Player():
 
     def getName(self):
         return self.name
+
+    def isFailed(self):
+        return self.failed
+
+    def setFailed(self):
+        self.failed = True
