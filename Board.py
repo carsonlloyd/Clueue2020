@@ -50,18 +50,18 @@ class Board:
                 {'x': 745, 'y':542}, #KITCHEN = 8
                 {'x': 0, 'y':0}, #MAX_ROOM = 9
 
-                {'x': 300, 'y':125}, #H_STUDY_HALL = 10
-                {'x': 600, 'y':125}, #H_HALL_LOUNGE = 11
-                {'x': 150, 'y':230}, #H_STUDY_LIBRARY = 12
-                {'x': 450, 'y':230}, #H_HALL_BILLIARD_ROOM = 13
-                {'x': 750, 'y':230}, #H_LOUNGE_DINING_ROOM = 14
-                {'x': 300, 'y':335}, #H_LIBRARY_BILLIARD_ROOM = 15
-                {'x': 600, 'y':335}, #H_BILLIARD_ROOM_DINING_ROOM = 16
-                {'x': 150, 'y':440}, #H_LIBRARY_CONSERVATORY = 17
-                {'x': 450, 'y':440}, #H_BILLIARD_ROOM_BALL_ROOM = 18
-                {'x': 750, 'y':440}, #H_DINING_ROOM_KITCHEN = 19
-                {'x': 300, 'y':545}, #H_CONSERVATORY_BALL_ROOM = 20
-                {'x': 600, 'y':545}  #H_BALL_ROOM_KITCHEN = 21
+                {'x': 300, 'y':95}, #H_STUDY_HALL = 10
+                {'x': 600, 'y':95}, #H_HALL_LOUNGE = 11
+                {'x': 150, 'y':200}, #H_STUDY_LIBRARY = 12
+                {'x': 450, 'y':200}, #H_HALL_BILLIARD_ROOM = 13
+                {'x': 750, 'y':200}, #H_LOUNGE_DINING_ROOM = 14
+                {'x': 300, 'y':305}, #H_LIBRARY_BILLIARD_ROOM = 15
+                {'x': 600, 'y':305}, #H_BILLIARD_ROOM_DINING_ROOM = 16
+                {'x': 150, 'y':410}, #H_LIBRARY_CONSERVATORY = 17
+                {'x': 450, 'y':410}, #H_BILLIARD_ROOM_BALL_ROOM = 18
+                {'x': 750, 'y':410}, #H_DINING_ROOM_KITCHEN = 19
+                {'x': 300, 'y':515}, #H_CONSERVATORY_BALL_ROOM = 20
+                {'x': 600, 'y':515}  #H_BALL_ROOM_KITCHEN = 21
             ]
 
     def draw(self, img, x,y):
@@ -77,7 +77,7 @@ class Board:
         self.board.blit(boardimg,(0,0))
 
         for room in self.rooms:
-            layer = 30
+            layer = 25
             coords = self.abs_pos[room.getRoomType()]
             x = coords['x'] - layer
             y = coords['y'] 
