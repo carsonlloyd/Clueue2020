@@ -527,7 +527,7 @@ def parseMessage(jsonMessage):
 
         if suspect == cf_suspect and Room.WeaponType(weapon).name == case_file['weapon'] and room == case_file['room']:
             sendAll(Message.send_game_win_accusation, {'client_id':client, 'suspect':suspect, 'weapon':case_file['weapon'], 'room':room})
-            game_won = True
+            #game_won = True # HAVE TO COMMENT THIS OUT - race condition?
             # go on to display message to clients
         else:
             Message.send_false_accusation(playerAddresses[turn])
@@ -718,6 +718,7 @@ def main():
         pygame.display.update()
 
     # game_won = True, what else? cleanup? TODO
+    # FIX HERE - game just closes when won - would be okay if just running command line
     print("GAME_WON = True")
 
     selector.close()
