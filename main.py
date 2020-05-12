@@ -2,9 +2,11 @@ from Globals import *
 from Board import Board
 from Player import Player
 import Room, Cards
-import time, os, random, argparse, socket, selectors, types, json
+import time, os, random, argparse, socket, selectors, types, json, sys
 from typing import List, Dict
 import message_drivers as Message
+import pygame
+from pygame.locals import *
 
 #########################################################################
 # This is all networking garbage, you probably dont want this
@@ -41,7 +43,7 @@ def addMessage(message, connid):
 
 def accept_wrapper(sock):
     conn, addr = sock.accept() #should be ready to read
-    global playerAddresses, hands
+    global playerAddresses, hands, characters
     playerAddresses[len(playerAddresses)] = addr
     messages[addr] = []
     print('accepted connection from: ', addr)
@@ -122,6 +124,7 @@ def start_connections(host, port, num_conns=1):
 #########################################################################
 # END OF NETWORKING GARBAGE
 ##########################################################################
+players = []
 
 def initPlayers(numPlayers):
     global players
@@ -130,14 +133,71 @@ def initPlayers(numPlayers):
         for playerIdx,roomIdx in enumerate(random.sample(range(9),numPlayers)):
             mainBoard.rooms[roomIdx].addPlayer(players[playerIdx]) #kinda bad encapsulation but thats pythons fault
 
-def initialize():
+    mainBoard.updatePlayerLocationsOnBoard()
+    pygame.display.update()
+
+def button(msg,x,y,w,h,ac, action = None):
+    mouse = pygame.mouse.get_pos()
+    click = pygame.mouse.get_pressed()
+
+    if x+w > mouse[0] > x and y+h > mouse[1] > y:
+        pygame.draw.rect(DISPLAYSURF, ac,(x,y,w,h))
+        if click[0] == 1 and action !=None:
+                action()
+    else:
+        pygame.draw.rect(DISPLAYSURF, ac,(x,y,w,h))
+
+    smallText = pygame.font.Font("freesansbold.ttf",20)
+    textSurf, textRect = text_objects(msg, smallText)
+    textRect.center = ( (x+(w/2)), (y+(h/2)) )
+    DISPLAYSURF.blit(textSurf, textRect)
+
+def text_objects(text, font):
+    textSurface = font.render(text, True, (0,0,0))
+    return textSurface, textSurface.get_rect()
+
+def game_intro(DISPLAYSURF, clock):
+
+    scarlett = (200,0,0)
+    white = (255,255,255)
+    green = (0,200,0)
+    peacock = (65,85,150)
+    mustard = (255, 219, 88)
+    plum = (221,160,221)
+
+    intro = True
+    while intro:
+        for event in pygame.event.get():
+            print(event)
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                quit()
+                
+        largeText = pygame.font.Font('freesansbold.ttf',50)
+        TextSurf, TextRect = text_objects("Clueless: Pick your character", largeText)
+        TextRect.center = ((960/2),(720/3))
+        DISPLAYSURF.blit(TextSurf, TextRect)
+
+        mouse = pygame.mouse.get_pos()
+
+        button ("Mr. Green", 150, 350, 150, 50, green, initPlayers('G'))
+        button ("Col. Mustard", 150, 450, 150, 50, mustard, initPlayers('M'))
+        button ("Miss Scarlett", 150, 550, 150, 50, scarlett, initPlayers('S'))
+        button ("Prof. Plum", 450, 350, 150, 50, plum, initPlayers('P'))
+        button ("Mrs. Peacock", 450, 450, 150, 50, peacock, initPlayers('C'))
+        button ("Mrs. White", 450, 550, 150, 50, white, initPlayers('W'))
+
+        pygame.display.update()
+        clock.tick(15)
+
+def initialize(DISPLAYSURF, PLAYERIMAGES, clock):
     '''
     Initialize game board
     '''
     global mainBoard
     print('initializing')
 
-    mainBoard = Board()
+    mainBoard = Board(DISPLAYSURF, PLAYERIMAGES)
     #randomly place players
     initPlayers(numPlayers)
     initNetwork(numPlayers)
@@ -253,6 +313,7 @@ def parseMessage(jsonMessage):
         updated = True
         gameStarted = True
         print('game started')
+        mainBoard.updatePlayerLocationsOnBoard()
     elif message_type == 'ready_for_turn':
         isTurn = True
     elif message_type == 'card_set':
@@ -286,6 +347,7 @@ def parseMessage(jsonMessage):
             # print(str(players[0]) + " : " + str(message['player']))
             if str(players[0]) == message['player']:
                 Message.send_end_turn((ADDR,PORT), str(player))
+        mainBoard.updatePlayerLocationsOnBoard()
     elif message_type == 'make_suggestion':
         print("Make suggestion: ")
         available_suspects = message['suspects']
@@ -583,7 +645,9 @@ def update(action):
             if message:
                 parseMessage(message)
 
-    mainBoard.updatePlayerLocationsOnBoard()
+    # attempt to only update board is action is real?
+    if action:
+        mainBoard.updatePlayerLocationsOnBoard()
 
 def render():
     '''
@@ -600,7 +664,7 @@ def render():
         updated = False
         return
     # os.system('cls' if os.name == 'nt' else 'clear') # comment out to stop clearing screen
-    mainBoard.draw()
+    # mainBoard.draw() # not needed any more? used to be for console printing?
     updated = False
     
 
@@ -612,13 +676,46 @@ def main():
     Update will change the game state (or process state update message as client)
     Render will draw all graphical items based on that state (no render for host)
     '''
-    initialize()
+    global clock, DISPLAYSURF, black, white, IMAGESDICT
+    pygame.init()
+    clock = pygame.time.Clock()
+    DISPLAYSURF = pygame.display.set_mode((960, 720))
+    pygame.display.set_caption('Clueless')
+    black = (0,0,0)
+    white = (255,255,255)
+    DISPLAYSURF.fill(white)
+
+    IMAGESDICT = {'gameboard': pygame.image.load('gameboard.png'),
+                  'greenplayer': pygame.image.load('green.png'),
+                  'mustardplayer': pygame.image.load('mustard.png'),
+                  'scarletplayer': pygame.image.load('scarlett.png'),
+                  'whiteplayer': pygame.image.load('white.png'),
+                  'plumplayer': pygame.image.load('plum.png'),
+                  'peacockplayer': pygame.image.load('peacock.png')}
+
+    currentImage = 0
+    PLAYERIMAGES = [IMAGESDICT['greenplayer'],
+                    IMAGESDICT['mustardplayer'],
+                    IMAGESDICT['scarletplayer'],
+                    IMAGESDICT['whiteplayer'],
+                    IMAGESDICT['plumplayer'],
+                    IMAGESDICT['peacockplayer']]
+
+    # game_intro(DISPLAYSURF, clock) # not taking player input any more, to simplify and get this working, skip this
+
+    initialize(DISPLAYSURF, PLAYERIMAGES, clock)
 
     global game_won
     while not game_won:
+        for event in pygame.event.get():
+            if event.type == QUIT:
+                pygame.quit()
+                sys.exit()
+                game_won = True
         action = getInput()
         update(action)
         render()
+        pygame.display.update()
 
     # game_won = True, what else? cleanup? TODO
     print("GAME_WON = True")
