@@ -707,6 +707,7 @@ def render():
     button( "L",986,52,40,40,(100,100,100), action=lambda: parseAction('left'))
     button( "R",1034,52,40,40,(100,100,100), action=lambda: parseAction('right'))
     button( "D",1010,93,40,40,(100,100,100), action=lambda: parseAction('down'))
+    button( "S",1010,140,40,40,(100,100,100), action=lambda: parseAction('secret'))
     #button( "Suggest",980,150,100,40,(100,100,100), action=lambda: parseAction('suggest'))
     #button( "Accuse",980,190,100,40,(100,100,100), action=lambda: parseAction('accuse'))
 
