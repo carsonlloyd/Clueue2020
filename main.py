@@ -356,7 +356,7 @@ def parseMessage(jsonMessage):
         players[0].setName(message['connected_client'])
         playerstring = getPlayerBySymbol(message['connected_client']).getName()
         pygame.draw.rect(DISPLAYSURF, (255, 255, 255), (960,540,1100,560))
-        print('You will be playing as ' + playerstring + "\n")
+        # print('You will be playing as ' + playerstring + "\n")
     elif message_type == 'player_positions' and not HOST:
         setPositions(message['positions'])
     elif message_type == 'start_game':
@@ -370,7 +370,7 @@ def parseMessage(jsonMessage):
         players[0].setHand([Cards.CardType(c) for c in message['cards']])
         for card in players[0].getHand():
             Cards.detectiveCard[cardToString([card])[0]] = True #absolutely disgusting
-        print('\nYour cards are: ' + str([card.name for card in players[0].getHand()]) + "\n")
+        # print('\nYour cards are: ' + str([card.name for card in players[0].getHand()]) + "\n")
     elif message_type == 'player_move' and HOST:
         player = getPlayerBySymbol(message['player'])
         if mainBoard.movePlayer(player, message['direction']):
