@@ -1,6 +1,6 @@
 COLOR 6
 Rem run three terminals to start server and clients for game testing
-start cmd /c python .\main.py -host
+start cmd /k python .\main.py -host
 timeout /t 2 /nobreak > NUL
 
 start /min cmd /c python .\main.py

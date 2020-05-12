@@ -37,7 +37,8 @@ class Board:
         self.avatarposx = {'G': gstartx, 'W': wstartx, 'C': cstartx, 'P': pstartx, 'M': mstartx, 'S':sstartx}
         self.avatarposy = {'G': gstarty, 'W': wstarty, 'C': cstarty, 'P': pstarty, 'M': mstarty, 'S':sstarty}
 
-        # MINUS 6 HERE - index 0 = -6 room type number enum
+        fix_x = -20
+        fix_y = -40
         self.abs_pos = [
                 {'x': 125, 'y':130}, #STUDY = 0
                 {'x': 435, 'y':130}, #HALL = 1
@@ -52,16 +53,25 @@ class Board:
 
                 {'x': 300, 'y':95}, #H_STUDY_HALL = 10
                 {'x': 600, 'y':95}, #H_HALL_LOUNGE = 11
-                {'x': 150, 'y':200}, #H_STUDY_LIBRARY = 12
-                {'x': 450, 'y':200}, #H_HALL_BILLIARD_ROOM = 13
+                {'x': 145, 'y':200}, #H_STUDY_LIBRARY = 12
+                {'x': 445, 'y':195}, #H_HALL_BILLIARD_ROOM = 13
                 {'x': 750, 'y':200}, #H_LOUNGE_DINING_ROOM = 14
                 {'x': 300, 'y':305}, #H_LIBRARY_BILLIARD_ROOM = 15
                 {'x': 600, 'y':305}, #H_BILLIARD_ROOM_DINING_ROOM = 16
-                {'x': 150, 'y':410}, #H_LIBRARY_CONSERVATORY = 17
+                {'x': 140, 'y':410}, #H_LIBRARY_CONSERVATORY = 17
                 {'x': 450, 'y':410}, #H_BILLIARD_ROOM_BALL_ROOM = 18
                 {'x': 750, 'y':410}, #H_DINING_ROOM_KITCHEN = 19
                 {'x': 300, 'y':515}, #H_CONSERVATORY_BALL_ROOM = 20
-                {'x': 600, 'y':515}  #H_BALL_ROOM_KITCHEN = 21
+                {'x': 600, 'y':515},  #H_BALL_ROOM_KITCHEN = 21
+
+                {'x': 0, 'y':0}, #MIN_START = 22
+                {'x': gstartx+fix_x+5, 'y':gstarty+fix_y+5}, #GREEN_HS = 23
+                {'x': mstartx+fix_x, 'y':mstarty+fix_y}, #MUSTARD_HS = 24
+                {'x': sstartx+fix_x, 'y':sstarty+fix_y}, #SCARLET_HS = 25
+                {'x': pstartx+fix_x, 'y':pstarty+fix_y}, #PLUM_HS = 26
+                {'x': wstartx+fix_x+5, 'y':wstarty+fix_y+5}, #WHITE_HS = 27
+                {'x': cstartx+fix_x, 'y':cstarty+fix_y} #PEACOCK_HS = 28
+    
             ]
 
     def draw(self, img, x,y):

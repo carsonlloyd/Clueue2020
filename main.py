@@ -131,8 +131,21 @@ def initPlayers(numPlayers):
     global players
     players = [Player(playerNames[i]) for i in random.sample(range(6),numPlayers)]
     if HOST:
-        for playerIdx,roomIdx in enumerate(random.sample(range(9),numPlayers)):
-            mainBoard.rooms[roomIdx].addPlayer(players[playerIdx]) #kinda bad encapsulation but thats pythons fault
+        for player in players:
+            char = str(player)
+            if char == 'M':
+                roomID = 24
+            elif char == 'S':
+                roomID = 25
+            elif char == 'P':
+                roomID = 26
+            elif char == 'C':
+                roomID = 28
+            elif char == 'G':
+                roomID = 23
+            elif char == 'W':
+                roomID = 27
+            mainBoard.rooms[roomID].addPlayer(player)
 
     mainBoard.updatePlayerLocationsOnBoard()
     # pygame.display.update()
@@ -587,16 +600,22 @@ def parseMessage(jsonMessage):
                 sendAll(Message.send_game_win_accusation, {'client_id':client, 'suspect':False, 'weapon':False, 'room':False})
                 # game_won = True
             else:       # otherwise, continue on like normal
-                if mainBoard.getPlayerRoom(p).getRoomType() > Room.RoomType.MAX_ROOM:
-                    in_hallway = True # if in hallway, move them
-                else:
-                    in_hallway = False # otherwise no need to move them
-
-                if p in players and in_hallway:    # move player into a room so they are out of the hallway
-                    # for now just go random, TODO move them to their starting room?
-                    room = random.randint(0,8)
-                    mainBoard.updatePlayerPos(p, room)
-                    sendAll(Message.send_update_player_pos, {'player':str(p), 'pos':room})
+                if p in players:    # go back to your room
+                    char = str(p)
+                    if char == 'M':
+                        roomID = 24
+                    elif char == 'S':
+                        roomID = 25
+                    elif char == 'P':
+                        roomID = 26
+                    elif char == 'C':
+                        roomID = 28
+                    elif char == 'G':
+                        roomID = 23
+                    elif char == 'W':
+                        roomID = 27
+                    mainBoard.updatePlayerPos(p, roomID)
+                    sendAll(Message.send_update_player_pos, {'player':str(p), 'pos':roomID})
     elif message_type == 'game_win_accusation':
         culprit = str(message['suspect'])
         weapon = str(message['weapon'])
