@@ -21,7 +21,7 @@ def initNetwork(numPlayers):
         print('server started, waiting for clients...')
         cards = Cards.Cards()
         casefile = cards.CaseFile()
-        # print(str(cards.getCaseFile()))
+        print(str(cards.getCaseFile())) # FOR DEBUGGING/TESTING
         cards.shufflecards()
         cards.deal(numPlayers)
         hands = cards.hands
@@ -599,7 +599,7 @@ def render():
         print('waiting for game to start...')
         updated = False
         return
-    os.system('cls' if os.name == 'nt' else 'clear') # comment out to stop clearing screen
+    # os.system('cls' if os.name == 'nt' else 'clear') # comment out to stop clearing screen
     mainBoard.draw()
     updated = False
     
