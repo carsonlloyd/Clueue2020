@@ -527,6 +527,8 @@ def parseMessage(jsonMessage):
             if c.name == case_file['suspect']:
                 cf_suspect = cardToString([c])[0]
 
+        #print(suspect + ' ' + cf_suspect + ' ' + Room.WeaponType(weapon).name + ' ' + case_file['weapon'] + ' ' + room + ' ' + case_file['room'])
+        #print(str(suspect == cf_suspect) + ' ' + str(Room.WeaponType(weapon).name == case_file['weapon']) + ' ' + str(room == case_file['room']))
         if suspect == cf_suspect and Room.WeaponType(weapon).name == case_file['weapon'] and room == case_file['room']:
             sendAll(Message.send_game_win_accusation, {'client_id':client, 'suspect':suspect, 'weapon':case_file['weapon'], 'room':room})
             #game_won = True # HAVE TO COMMENT THIS OUT - race condition?
