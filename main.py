@@ -347,6 +347,7 @@ def parseMessage(jsonMessage):
             # print(str(players[0]) + " : " + str(message['player']))
             if str(players[0]) == message['player']:
                 Message.send_end_turn((ADDR,PORT), str(player))
+        mainBoard.updatePlayerLocationsOnBoard()
     elif message_type == 'make_suggestion':
         print("Make suggestion: ")
         available_suspects = message['suspects']
