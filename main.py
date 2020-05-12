@@ -46,7 +46,7 @@ def accept_wrapper(sock):
     global playerAddresses, hands, characters
     playerAddresses[len(playerAddresses)] = addr
     messages[addr] = []
-    print('Accepting client connection from: ', addr)
+    print('[server] Accepting client connection from: ', addr)
     conn.setblocking(False)
     data = types.SimpleNamespace(connid=addr, inb=b'', outb=b'')
     events = selectors.EVENT_READ | selectors.EVENT_WRITE
@@ -306,19 +306,20 @@ def parseMessage(jsonMessage):
     message_type = message['message_type']
     if message_type == 'player_connected':
         players[0].setName(message['connected_client'])
-        print('You will be playing as ' + message['connected_client'])
+        playerstring = getPlayerBySymbol(message['connected_client']).getName()
+        print('You will be playing as ' + playerstring + "\n")
     elif message_type == 'player_positions' and not HOST:
         setPositions(message['positions'])
     elif message_type == 'start_game':
         updated = True
         gameStarted = True
-        print('Game starting...')
+        print('Game starting...\n\n')
         mainBoard.updatePlayerLocationsOnBoard()
     elif message_type == 'ready_for_turn':
         isTurn = True
     elif message_type == 'card_set':
         players[0].setHand([Cards.CardType(c) for c in message['cards']])
-        print('Your cards are: ' + str([card.name for card in players[0].getHand()]))
+        print('\nYour cards are: ' + str([card.name for card in players[0].getHand()]) + "\n")
     elif message_type == 'player_move' and HOST:
         player = getPlayerBySymbol(message['player'])
         if mainBoard.movePlayer(player, message['direction']):
