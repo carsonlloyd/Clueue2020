@@ -45,9 +45,9 @@ class Board:
                 {'x': 125, 'y':332}, #LIBRARY = 3
                 {'x': 435, 'y':332}, #BILLIARD_ROOM = 4
                 {'x': 745, 'y':332}, #DINING_ROOM = 5
-                {'x': 125, 'y':542}, #CONSERVATORY = 6
-                {'x': 435, 'y':542}, #BALL_ROOM = 7
-                {'x': 745, 'y':542}, #KITCHEN = 8
+                {'x': 125, 'y':547}, #CONSERVATORY = 6
+                {'x': 435, 'y':547}, #BALL_ROOM = 7
+                {'x': 745, 'y':547}, #KITCHEN = 8
                 {'x': 0, 'y':0}, #MAX_ROOM = 9
 
                 {'x': 300, 'y':95}, #H_STUDY_HALL = 10
@@ -79,15 +79,18 @@ class Board:
         for room in self.rooms:
             layer = 25
             coords = self.abs_pos[room.getRoomType()]
-            x = coords['x'] - layer
+            x = coords['x']
             y = coords['y'] 
 
 
             players_inside = room.getPlayers()
+            if len(players_inside) > 1 and room.getRoomType() < Room.RoomType.MAX_ROOM:
+                x = x - layer
             for player in players_inside:
                 self.avatarposx[str(player)] = x
                 self.avatarposy[str(player)] = y
-                x += layer
+                if room.getRoomType() < Room.RoomType.MAX_ROOM:
+                    x += layer
 
                 self.board.blit(images[str(player)], (self.avatarposx[str(player)] + 15, self.avatarposy[str(player)] + 40))
 
