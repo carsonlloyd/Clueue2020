@@ -126,19 +126,15 @@ def start_connections(host, port, num_conns=1):
 ##########################################################################
 players = []
 
-def initPlayers(choice):
+def initPlayers(numPlayers):
     global players
-    #TODO: need final value in send character choice
-    Message.send_character_choice((ADDR,PORT), choice, str(getPlayerBySymbol(choice)))
-    if choice not in players:
-        players.append(choice)
-        Message.send_character_confirm(playerAddresses[turn], choice)
-    else:
-        Message.send_character_unavail(playerAddresses[turn])
-    #players = [Player(playerNames[i]) for i in random.sample(range(6),numPlayers)]
+    players = [Player(playerNames[i]) for i in random.sample(range(6),numPlayers)]
     if HOST:
         for playerIdx,roomIdx in enumerate(random.sample(range(9),numPlayers)):
             mainBoard.rooms[roomIdx].addPlayer(players[playerIdx]) #kinda bad encapsulation but thats pythons fault
+
+    mainBoard.updatePlayerLocationsOnBoard()
+    pygame.display.update()
 
 def button(msg,x,y,w,h,ac, action = None):
     mouse = pygame.mouse.get_pos()
@@ -201,11 +197,10 @@ def initialize(DISPLAYSURF, PLAYERIMAGES, clock):
     global mainBoard
     print('initializing')
 
-    initNetwork(numPlayers)
     mainBoard = Board(DISPLAYSURF, PLAYERIMAGES)
     #randomly place players
-    #initPlayers(numPlayers)
-
+    initPlayers(numPlayers)
+    initNetwork(numPlayers)
 
 
 def determineOrder():
@@ -607,7 +602,9 @@ def update(action):
             if message:
                 parseMessage(message)
 
-    mainBoard.updatePlayerLocationsOnBoard(action)
+    # attempt to only update board is action is real?
+    if action:
+        mainBoard.updatePlayerLocationsOnBoard()
 
 def render():
     '''
@@ -623,8 +620,8 @@ def render():
         print('waiting for game to start...')
         updated = False
         return
-    os.system('cls' if os.name == 'nt' else 'clear') # comment out to stop clearing screen
-    mainBoard.draw()
+    # os.system('cls' if os.name == 'nt' else 'clear') # comment out to stop clearing screen
+    # mainBoard.draw() # not needed any more? used to be for console printing?
     updated = False
     
 
@@ -661,7 +658,7 @@ def main():
                     IMAGESDICT['plumplayer'],
                     IMAGESDICT['peacockplayer']]
 
-    game_intro(DISPLAYSURF, clock)
+    # game_intro(DISPLAYSURF, clock) # not taking player input any more, to simplify and get this working, skip this
 
     initialize(DISPLAYSURF, PLAYERIMAGES, clock)
 
@@ -677,7 +674,6 @@ def main():
         update(action)
         render()
         pygame.display.update()
-
 
     # game_won = True, what else? cleanup? TODO
 

@@ -37,54 +37,59 @@ class Board:
         self.avatarposx = {'G': gstartx, 'W': wstartx, 'C': cstartx, 'P': pstartx, 'M': mstartx, 'S':sstartx}
         self.avatarposy = {'G': gstarty, 'W': wstarty, 'C': cstarty, 'P': pstarty, 'M': mstarty, 'S':sstarty}
 
+        # MINUS 6 HERE - index 0 = -6 room type number enum
+        self.abs_pos = [
+                {'x': 170, 'y':185}, #STUDY = 0
+                {'x': 480, 'y':185}, #HALL = 1
+                {'x': 790, 'y':185}, #LOUNGE = 2
+                {'x': 170, 'y':400}, #LIBRARY = 3
+                {'x': 480, 'y':400}, #BILLIARD_ROOM = 4
+                {'x': 790, 'y':400}, #DINING_ROOM = 5
+                {'x': 170, 'y':600}, #CONSERVATORY = 6
+                {'x': 480, 'y':600}, #BALL_ROOM = 7
+                {'x': 790, 'y':600}, #KITCHEN = 8
+                {'x': 0, 'y':0}, #MAX_ROOM = 9
 
+                {'x': 330, 'y':150}, #H_STUDY_HALL = 10
+                {'x': 650, 'y':150}, #H_HALL_LOUNGE = 11
+                {'x': 170, 'y':250}, #H_STUDY_LIBRARY = 12
+                {'x': 480, 'y':250}, #H_HALL_BILLIARD_ROOM = 13
+                {'x': 790, 'y':250}, #H_LOUNGE_DINING_ROOM = 14
+                {'x': 330, 'y':360}, #H_LIBRARY_BILLIARD_ROOM = 15
+                {'x': 640, 'y':360}, #H_BILLIARD_ROOM_DINING_ROOM = 16
+                {'x': 170, 'y':475}, #H_LIBRARY_CONSERVATORY = 17
+                {'x': 480, 'y':475}, #H_BILLIARD_ROOM_BALL_ROOM = 18
+                {'x': 790, 'y':475}, #H_DINING_ROOM_KITCHEN = 19
+                {'x': 330, 'y':580}, #H_CONSERVATORY_BALL_ROOM = 20
+                {'x': 640, 'y':580}  #H_BALL_ROOM_KITCHEN = 21
+            ]
 
     def draw(self, img, x,y):
         self.board.blit(img, (x,y))
 
-    def updatePlayerLocationsOnBoard(self, img):
+    def updatePlayerLocationsOnBoard(self):
         '''
         updates the game board to properly display where the
         players currently are
         Works by making a list of the characters symbols and then padding to the desired size
         '''
+        # print(action)
         self.board.blit(boardimg,(0,0))
-        
-        #draw in rooms
-        for i in range(3):
-            for j in range(3):
-                playerString = ' '
-                for player in self.rooms[3*i+j].getPlayers():
-                    playerString += str(player) + ' '
-                    if 'up' in action:
-                         self.avatarposy[str(player)] = self.avatarposy[str(player)] + 105
-                    elif 'down' in action:
-                         self.avatarposy[str(player)] = self.avatarposy[str(player)] - 105
-                    elif 'left' in action:
-                         self.avatarposx[str(player)] = self.avatarposx[str(player)] - 150
-                    elif 'right' in action:
-                         self.avatarposx[str(player)] = self.avatarposx[str(player)] + 150
-                   
-                    self.board.blit(images[str(player)], (self.avatarposx[str(player)], self.avatarposy[str(player)]))
-         
-        #draw in hallways 
-        for i in range(2):
-           for j in range(3):
-                playerString = ''
-                playerInHallway = False
-                for player in self.rooms[5*i+12+j].getPlayers():
-                    playerString += str(player)
-                    playerInHallway = True
-                    if (playerInHallway):
-                         if 'up' in action:
-                             self.avatarposy[str(player)] = self.avatarposy[str(player)] + 105
-                         elif 'down' in action:
-                             self.avatarposy[str(player)] = self.avatarposy[str(player)] - 105
-                         elif 'left' in action:
-                             self.avatarposx[str(player)] = self.avatarposx[str(player)] - 150
-                         elif 'right' in action:
-                             self.avatarposx[str(player)] = self.avatarposx[str(player)] + 150
-                
+
+        for room in self.rooms:
+            players_inside = room.getPlayers()
+            
+            layer = 10
+            coords = self.abs_pos[room.getRoomType()-6]
+            x = coords['x'] - layer
+            y = coords['y'] 
+
+            for player in players_inside:
+                self.avatarposx[str(player)] = x
+                self.avatarposy[str(player)] = y
+                x += layer
+
+                self.board.blit(images[str(player)], (self.avatarposx[str(player)]-10, self.avatarposy[str(player)]-10))                
 
     def getPlayerRoom(self, player):
         for room in self.rooms:

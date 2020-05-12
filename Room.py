@@ -12,6 +12,7 @@ class WeaponType(IntEnum):
     # MAX_WEAPON = 6
 
 class RoomType(IntEnum):
+    '''
     #HOMESQUARES
     GREEN_HS = -6
     MUSTARD_HS = -5
@@ -19,6 +20,7 @@ class RoomType(IntEnum):
     PLUM_HS = -3
     WHITE_HS = -2
     PEACOCK_HS = -1
+    '''
 
     #ROOMS
     STUDY = 0
@@ -59,12 +61,13 @@ class RoomType(IntEnum):
     H_KITCHEN_BALL_ROOM = 21
 
 roomAdjacencies = {
-    -6: {'up':RoomType.H_CONSERVATORY_BALL_ROOM },
-    -5: {'left':RoomType.H_DINING_ROOM_LOUNGE },
-    -4: {'down':RoomType.H_HALL_LOUNGE},
-    -3: {'right':RoomType.H_STUDY_LIBRARY },
-    -2: {'up':RoomType.H_BALL_ROOM_KITCHEN },
-    -1: {'right':RoomType.H_LIBRARY_CONSERVATORY },
+    #-6: {'up':RoomType.H_CONSERVATORY_BALL_ROOM },
+    #-5: {'left':RoomType.H_DINING_ROOM_LOUNGE },
+    #-4: {'down':RoomType.H_HALL_LOUNGE},
+    #-3: {'right':RoomType.H_STUDY_LIBRARY },
+    #-2: {'up':RoomType.H_BALL_ROOM_KITCHEN },
+    #-1: {'right':RoomType.H_LIBRARY_CONSERVATORY },
+    
     0: {'right':RoomType.H_STUDY_HALL, 'down':RoomType.H_STUDY_LIBRARY, 'secret':RoomType.KITCHEN},
     1: {'down': RoomType.H_HALL_BILLIARD_ROOM, 'right': RoomType.H_HALL_LOUNGE, 'left': RoomType.H_HALL_STUDY,},
     2: {'down': RoomType.H_LOUNGE_DINING_ROOM, 'left': RoomType.H_LOUNGE_HALL, 'secret': RoomType.CONSERVATORY },
@@ -93,12 +96,13 @@ roomAdjacencies = {
 }
 
 allowedMoves = {
-    -6: ['up'],
-    -5: ['left'],
-    -4: ['down'],
-    -3: ['right'],
-    -2: ['up'],
-    -1: ['right'],
+    #-6: ['up'],
+    #-5: ['left'],
+    #-4: ['down'],
+    #-3: ['right'],
+    #-2: ['up'],
+    #-1: ['right'],
+    
     0: ['right','down','secret'],
     1: ['right','down','left'],
     2: ['left', 'down', 'secret'],
@@ -125,12 +129,14 @@ allowedMoves = {
     21: ['left', 'right'],
 
     #ROOMS
-    'GREEN_HS': ['up'],
-    'MUSTARD_HS': ['left'],
-    'SCARLET_HS':['down'],
-    'PLUM_HS':['right'],
-    'WHITE_HS':['up'],
-    'PEACOCK_HS':['right'],
+    
+    #'GREEN_HS': ['up'],
+    #'MUSTARD_HS': ['left'],
+    #'SCARLET_HS':['down'],
+    #'PLUM_HS':['right'],
+    #'WHITE_HS':['up'],
+    #'PEACOCK_HS':['right'],
+    
     'STUDY': ['right','down','secret'],
     'HALL': ['right','down','left'],
     'LOUNGE': ['left', 'down', 'secret'],
@@ -202,6 +208,3 @@ class Room:
 
     def removeWeapon(self, weapon):
         self.weapons.remove(weapon)
-
-        
-        
