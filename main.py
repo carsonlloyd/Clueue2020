@@ -24,7 +24,7 @@ def initNetwork(numPlayers):
         print('Host server started, waiting for clients...')
         cards = Cards.Cards()
         casefile = cards.CaseFile()
-        print(str(cards.getCaseFile())) # FOR DEBUGGING/TESTING
+        #print(str(cards.getCaseFile())) # FOR DEBUGGING/TESTING
         cards.shufflecards()
         cards.deal(numPlayers)
         hands = cards.hands
@@ -533,7 +533,7 @@ def parseMessage(jsonMessage):
         # show suggester what disproved them
         eg.msgbox("You were disproved with card: " + message['pick'])
         Cards.detectiveCard[message['pick']] = True
-        print("DISPROVE" + str(message['pick']))
+        #print("DISPROVE" + str(message['pick']))
         Message.send_end_turn((ADDR,PORT), str(players[0]))
     elif message_type == 'make_accusation':
         #print("Make accusation: ")
