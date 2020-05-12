@@ -7,6 +7,7 @@ from typing import List, Dict
 import message_drivers as Message
 import pygame
 from pygame.locals import *
+import easygui as eg
 
 #########################################################################
 # This is all networking garbage, you probably dont want this
@@ -353,7 +354,7 @@ def parseMessage(jsonMessage):
         isTurn = True
     elif message_type == 'card_set':
         players[0].setHand([Cards.CardType(c) for c in message['cards']])
-        print('\nYour cards are: ' + str([card.name for card in players[0].getHand()]) + "\n")
+        #print('\nYour cards are: ' + str([card.name for card in players[0].getHand()]) + "\n")
     elif message_type == 'player_move' and HOST:
         player = getPlayerBySymbol(message['player'])
         if mainBoard.movePlayer(player, message['direction']):
@@ -384,26 +385,21 @@ def parseMessage(jsonMessage):
                 Message.send_end_turn((ADDR,PORT), str(player))
         mainBoard.updatePlayerLocationsOnBoard()
     elif message_type == 'make_suggestion':
-        print("Make a suggestion: ")
+        #print("Make a suggestion: ")
         available_suspects = message['suspects']
         available_weapons = message['weapons']
-        # TODO present gui for player to make suggestion
         # suspect,weapon = suggestion details from player
         suspect = weapon = None
+
         while suspect == None:
-            string = "Choose a suspect (" + str(available_suspects) + "): "
-            input_val = input(string)
-            if input_val in available_suspects:
-                suspect = input_val
+            string = "Choose a suspect:"
+            suspect = eg.buttonbox(string, choices=available_suspects)
+
         while weapon == None:
-            string = "Choose a weapon (" + str([Room.WeaponType(x).name for x in available_weapons]) + "): "
-            input_val = input(string)
-            try:
-                input_val = Room.WeaponType[input_val].value
-                if input_val in available_weapons:
-                    weapon = input_val
-            except KeyError:
-                pass
+            string = "Choose a weapon:"
+            input_val = eg.indexbox(string, choices=[Room.WeaponType(x).name for x in available_weapons])
+            if input_val in available_weapons:
+                weapon = input_val
             
         Message.send_suggestion((ADDR,PORT), str(players[turn]), suspect, weapon) # this is for sending to host server right?
     elif message_type == 'suggestion':
@@ -487,10 +483,15 @@ def parseMessage(jsonMessage):
         if not disproved:
             #print("NOT DISPROVED")
             # allow accusation
-            available_suspects = playerNames
-            available_weapons = mainBoard.getWeapons()
-            available_rooms = [r.getRoomType() for r in mainBoard.getRooms() if r.getPlayers() and r.getRoomType() < Room.RoomType.MAX_ROOM] # list rooms, from board's rooms if room has player(s)
-            Message.send_make_accusation(playerAddresses[turn], available_suspects, available_weapons, available_rooms)
+            accuse = eg.ynbox("You were not disproved. Do you want to make an accusation?")
+            if accuse:
+                available_suspects = playerNames
+                available_weapons = mainBoard.getWeapons()
+                available_rooms = [r.getRoomType() for r in mainBoard.getRooms() if r.getPlayers() and r.getRoomType() < Room.RoomType.MAX_ROOM] # list rooms, from board's rooms if room has player(s)
+                Message.send_make_accusation(playerAddresses[turn], available_suspects, available_weapons, available_rooms)
+            else:
+                Message.send_end_turn((ADDR,PORT), str(players[0]))
+
 
     elif message_type == 'cannot_suggest':
         pass #TODO
@@ -499,15 +500,14 @@ def parseMessage(jsonMessage):
         # allow player to choose which match to send back
         matches = cardToString(matches)
 
-        print("Suggestion: " + str(matches))
-        print("Choose a card from your hand to disprove the suggestion: ")
+        #print("Suggestion: " + str(matches))
 
         choice = None
         while choice == None:
-            string = "Choose a card (" + str(matches) + "): "
-            input_val = input(string)
+            input_val = eg.buttonbox("Suggestion: " + str(matches) + "\nChoose a card from your hand which can disprove the suggestion:", choices=matches)
             if input_val in matches:
                 choice = input_val
+
         Message.send_disprove_made((ADDR,PORT), message['client_id'], choice)
     elif message_type == 'disprove_made':
         # TELL CLIENT
@@ -515,10 +515,10 @@ def parseMessage(jsonMessage):
         pass
     elif message_type == 'disprove_notify':
         # show suggester what disproved them
-        print("You were disproved with card: " + message['pick'])
+        eg.msgbox("You were disproved with card: " + message['pick'])
         Message.send_end_turn((ADDR,PORT), str(players[0]))
     elif message_type == 'make_accusation':
-        print("Make accusation: ")
+        #print("Make accusation: ")
         available_suspects = message['suspects']
         available_weapons = message['weapons']
         available_rooms = message['rooms']
@@ -527,25 +527,23 @@ def parseMessage(jsonMessage):
             available_rooms[i] = Room.RoomType(available_rooms[i]).name
         # allow player to choose
         suspect = weapon = room = None
+
         while suspect == None:
-            string = "Choose a suspect (" + str(available_suspects) + "): "
-            input_val = input(string)
+            input_val = eg.buttonbox("Choose a suspect:", choices=available_suspects)
             if input_val in available_suspects:
                 suspect = input_val
+
         while weapon == None:
-            string = "Choose a weapon (" + str([Room.WeaponType(x).name for x in available_weapons]) + "): "
-            input_val = input(string)
-            try:
-                input_val = Room.WeaponType[input_val].value
-                if input_val in available_weapons:
-                    weapon = input_val
-            except KeyError:
-                pass
+            string = "Choose a weapon:"
+            input_val = eg.indexbox(string, choices=[Room.WeaponType(x).name for x in available_weapons])
+            if input_val in available_weapons:
+                weapon = input_val
+
         while room == None:
-            string = "Choose a room (" + str(available_rooms) + "): "
-            input_val = input(string)
+            input_val = eg.buttonbox("Choose a room:", choices=available_rooms)
             if input_val in available_rooms:
                 room = input_val
+
         Message.send_accusation_made((ADDR,PORT), str(players[0]), suspect, weapon, room)
     elif message_type == 'accusation_made' and HOST:
         global cards, game_won
@@ -600,15 +598,17 @@ def parseMessage(jsonMessage):
         room = str(message['room'])
 
         if culprit == 'False' and weapon == 'False' and room == 'False':
-            print("All players lost! Too bad!")
+            #print("All players lost! Too bad!")
             # TODO display gui window with this information
+            eg.msgbox("All players lost! Too bad! Game over.", ok_button="End Game")
         else:
-            print("Game has been won: " + culprit + " in the " + room + " with the " + weapon)
+            #print("Game has been won: " + culprit + " in the " + room + " with the " + weapon)
             # TODO display gui window with this information
+            eg.msgbox("Game has been won: " + culprit + " in the " + room + " with the " + weapon, ok_button="End Game")
 
         game_won = True
     elif message_type == 'false_accusation':
-        print("Accusation was false. You cannot take any more turns!")
+        eg.msgbox("Accusation was false. You cannot take any more turns!")
         p = players[0]
         p.setFailed()
         Message.send_end_turn((ADDR,PORT), str(players[0]))
@@ -702,8 +702,8 @@ def render():
     button( "L",986,52,40,40,(100,100,100), action=lambda: parseAction('left'))
     button( "R",1034,52,40,40,(100,100,100), action=lambda: parseAction('right'))
     button( "D",1010,93,40,40,(100,100,100), action=lambda: parseAction('down'))
-    button( "Suggest",980,150,100,40,(100,100,100), action=lambda: parseAction('suggest'))
-    button( "Accuse",980,190,100,40,(100,100,100), action=lambda: parseAction('accuse'))
+    #button( "Suggest",980,150,100,40,(100,100,100), action=lambda: parseAction('suggest'))
+    #button( "Accuse",980,190,100,40,(100,100,100), action=lambda: parseAction('accuse'))
 
     myfont = pygame.font.SysFont("monospace", 20, (0,255,0))
     if isTurn:
@@ -716,6 +716,7 @@ def render():
     else:
         #cover up the text with a white rectangle
         pygame.draw.rect(DISPLAYSURF, (255, 255, 255), (960,280,1100,40))
+        
     textSurf, textRect = text_objects("You are", myfont)
     textRect.center = ( (960+(70)), (500) )
     DISPLAYSURF.blit(textSurf, textRect)
