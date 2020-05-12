@@ -197,7 +197,7 @@ class Room:
         return self.weapons
 
     def addPlayer(self, player):
-        print('adding ' + str(player) + ' to ' + str(self.roomType))
+        # print('adding ' + str(player) + ' to ' + str(self.roomType))
         self.players.append(player)
 
     def addWeapon(self, weapon):

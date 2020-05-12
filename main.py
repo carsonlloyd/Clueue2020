@@ -17,10 +17,10 @@ def initNetwork(numPlayers):
     if HOST:
         server_socket.bind((ADDR, PORT))
         server_socket.listen() #add num_players for max socket count
-        print('listening on ', (ADDR,PORT))
+        # print('listening on ', (ADDR,PORT))
         server_socket.setblocking(False)
         selector.register(server_socket,selectors.EVENT_READ, data=None)
-        print('server started, waiting for clients...')
+        print('Host server started, waiting for clients...')
         cards = Cards.Cards()
         casefile = cards.CaseFile()
         print(str(cards.getCaseFile())) # FOR DEBUGGING/TESTING
@@ -46,7 +46,7 @@ def accept_wrapper(sock):
     global playerAddresses, hands, characters
     playerAddresses[len(playerAddresses)] = addr
     messages[addr] = []
-    print('accepted connection from: ', addr)
+    print('Accepting client connection from: ', addr)
     conn.setblocking(False)
     data = types.SimpleNamespace(connid=addr, inb=b'', outb=b'')
     events = selectors.EVENT_READ | selectors.EVENT_WRITE
@@ -109,7 +109,7 @@ def service_connection(key, mask):
 def start_connections(host, port, num_conns=1):
     global messages
     server_addr = (host,port)
-    print('starting connection ' + ' to ' + str(server_addr))
+    # print('starting connection ' + ' to ' + str(server_addr))
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.setblocking(False)
     sock.connect_ex(server_addr)
@@ -168,7 +168,7 @@ def game_intro(DISPLAYSURF, clock):
     intro = True
     while intro:
         for event in pygame.event.get():
-            print(event)
+            # print(event)
             if event.type == pygame.QUIT:
                 pygame.quit()
                 quit()
@@ -195,7 +195,7 @@ def initialize(DISPLAYSURF, PLAYERIMAGES, clock):
     Initialize game board
     '''
     global mainBoard
-    print('initializing')
+    # print('initializing')
 
     mainBoard = Board(DISPLAYSURF, PLAYERIMAGES)
     #randomly place players
@@ -220,10 +220,10 @@ def setPositions(positions):
     count = 1
     for key, value in positions.items():
         if key == str(players[0]):
-            print('adding myself (' + str(key) + ') to ' + str(Room.RoomType(value)))
+            # print('adding myself (' + str(key) + ') to ' + str(Room.RoomType(value)))
             mainBoard.rooms[value].addPlayer(players[0])
         else:
-            print('adding ' + str(key) + ' to ' + str(Room.RoomType(value)))
+            # print('adding ' + str(key) + ' to ' + str(Room.RoomType(value)))
             players[count].setName(key)
             mainBoard.rooms[value].addPlayer(players[count])
             count += 1
@@ -312,7 +312,7 @@ def parseMessage(jsonMessage):
     elif message_type == 'start_game':
         updated = True
         gameStarted = True
-        print('game started')
+        print('Game starting...')
         mainBoard.updatePlayerLocationsOnBoard()
     elif message_type == 'ready_for_turn':
         isTurn = True
@@ -349,7 +349,7 @@ def parseMessage(jsonMessage):
                 Message.send_end_turn((ADDR,PORT), str(player))
         mainBoard.updatePlayerLocationsOnBoard()
     elif message_type == 'make_suggestion':
-        print("Make suggestion: ")
+        print("Make a suggestion: ")
         available_suspects = message['suspects']
         available_weapons = message['weapons']
         # TODO present gui for player to make suggestion
@@ -460,10 +460,12 @@ def parseMessage(jsonMessage):
     elif message_type == 'cannot_suggest':
         pass #TODO
     elif message_type == 'make_disprove':
-        print("Make disprove: ")
         matches = message['matches'] # these are CardType enums
         # allow player to choose which match to send back
         matches = cardToString(matches)
+
+        print("Suggestion: " + str(matches))
+        print("Choose a card from your hand to disprove the suggestion: ")
 
         choice = None
         while choice == None:
@@ -478,7 +480,7 @@ def parseMessage(jsonMessage):
         pass
     elif message_type == 'disprove_notify':
         # show suggester what disproved them
-        print("DISPROVED: " + message['pick'])
+        print("You were disproved with card: " + message['pick'])
         Message.send_end_turn((ADDR,PORT), str(players[0]))
     elif message_type == 'make_accusation':
         print("Make accusation: ")
@@ -543,7 +545,7 @@ def parseMessage(jsonMessage):
 
             if isEnd:   # end game, end false message and game_won
                 sendAll(Message.send_game_win_accusation, {'client_id':client, 'suspect':False, 'weapon':False, 'room':False})
-                game_won = True
+                # game_won = True
             else:       # otherwise, continue on like normal
                 if mainBoard.getPlayerRoom(p).getRoomType() > Room.RoomType.MAX_ROOM:
                     in_hallway = True # if in hallway, move them
@@ -569,7 +571,7 @@ def parseMessage(jsonMessage):
 
         game_won = True
     elif message_type == 'false_accusation':
-        print("Accusation was false.")
+        print("Accusation was false. You cannot take any more turns!")
         p = players[0]
         p.setFailed()
         Message.send_end_turn((ADDR,PORT), str(players[0]))
@@ -719,7 +721,7 @@ def main():
 
     # game_won = True, what else? cleanup? TODO
     # FIX HERE - game just closes when won - would be okay if just running command line
-    print("GAME_WON = True")
+    print("Game over... play again!")
 
     selector.close()
 
@@ -730,6 +732,6 @@ if __name__ == "__main__":
     results = parser.parse_args()
     global HOST
     HOST = results.host
-    print('HOST:' + str(HOST))
+    # print('HOST:' + str(HOST))
 
     main()
