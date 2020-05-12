@@ -137,11 +137,15 @@ def initPlayers(numPlayers):
     # pygame.display.update()
 
 def button(msg,x,y,w,h,ac, action = None):
+    global isTurn
     mouse = pygame.mouse.get_pos()
     click = pygame.mouse.get_pressed()
 
-    if x+w > mouse[0] > x and y+h > mouse[1] > y:
-        pygame.draw.rect(DISPLAYSURF, ac,(x,y,w,h))
+    if not isTurn:
+        pygame.draw.rect(DISPLAYSURF, (ac[0]+100, ac[1]+100, ac[2]+100),(x,y,w,h))
+
+    elif x+w > mouse[0] > x and y+h > mouse[1] > y:
+        pygame.draw.rect(DISPLAYSURF, (ac[0]+10, ac[1]+10, ac[2]+10),(x,y,w,h))
         if click[0] == 1 and action !=None:
                 action()
     else:
@@ -293,6 +297,36 @@ def incrementTurn():
     global turn, numPlayers
     turn += 1
     turn %= numPlayers
+
+def initGUI():
+    global clock, DISPLAYSURF, black, white, IMAGESDICT
+    pygame.init()
+    clock = pygame.time.Clock()
+    DISPLAYSURF = pygame.display.set_mode((1100, 720)) #board is 960x720. action bar is 720x240
+    pygame.display.set_caption('Clueless')
+    black = (0,0,0)
+    white = (255,255,255)
+    DISPLAYSURF.fill(white)
+
+    IMAGESDICT = {'gameboard': pygame.image.load('gameboard.png'),
+                  'greenplayer': pygame.image.load('green.png'),
+                  'mustardplayer': pygame.image.load('mustard.png'),
+                  'scarletplayer': pygame.image.load('scarlett.png'),
+                  'whiteplayer': pygame.image.load('white.png'),
+                  'plumplayer': pygame.image.load('plum.png'),
+                  'peacockplayer': pygame.image.load('peacock.png')}
+
+    currentImage = 0
+    PLAYERIMAGES = [IMAGESDICT['greenplayer'],
+                    IMAGESDICT['mustardplayer'],
+                    IMAGESDICT['scarletplayer'],
+                    IMAGESDICT['whiteplayer'],
+                    IMAGESDICT['plumplayer'],
+                    IMAGESDICT['peacockplayer']]
+
+    # game_intro(DISPLAYSURF, clock) # not taking player input any more, to simplify and get this working, skip this
+
+    initialize(DISPLAYSURF, PLAYERIMAGES, clock)
 
 def parseMessage(jsonMessage):
     '''
@@ -581,9 +615,11 @@ def parseMessage(jsonMessage):
     elif message_type == 'end_turn' and HOST and message['client_id'] == str(players[turn]):
         incrementTurn()
         Message.send_ready_for_turn(playerAddresses[turn])
-        
 
 def parseAction(action):
+    global isTurn
+    if not isTurn:
+        return
     if action in ['up','down','left','right','secret']:
         Message.send_player_move((ADDR,PORT), str(players[0]), action)
     elif action == 'help':
@@ -592,11 +628,11 @@ def parseAction(action):
         print('Keep in mind that only one player can occupy a hallway at a time and suggestions for a room must be made with you in that room\n')
         print('When you move into a room, you must make a suggestion, and one player will show you one card to disprove a part of your suggestion')
         print('On a players turn, if they correctly accuse the right person/room/weapon then they win the game!\n')
-        global isTurn
         isTurn = True
     elif action in ['suggest', 'accuse']:
         pass
         #do the other things
+    isTurn = False
 
 def getInput():
     '''
@@ -618,12 +654,11 @@ def getInput():
 
     global validInputs
     action = ''
-    while action not in validInputs: 
-        action = input('Please select an action (up, down, left, right, secret, help): ')
+    #while action not in validInputs:
+    #    action = input('Please select an action (up, down, left, right, secret, help): ')
 
-    isTurn = False
-    parseAction(action)
-
+    #isTurn = False
+    #parseAction(action)
 
     return action
 
@@ -661,7 +696,36 @@ def render():
 
     The host logic will disregard this function
     '''
-    global updated, gameStarted
+    global updated, gameStarted, isTurn
+
+    button( "U",1010,10,40,40,(100,100,100), action=lambda: parseAction('up'))
+    button( "L",986,52,40,40,(100,100,100), action=lambda: parseAction('left'))
+    button( "R",1034,52,40,40,(100,100,100), action=lambda: parseAction('right'))
+    button( "D",1010,93,40,40,(100,100,100), action=lambda: parseAction('down'))
+    button( "Suggest",980,150,100,40,(100,100,100), action=lambda: parseAction('suggest'))
+    button( "Accuse",980,190,100,40,(100,100,100), action=lambda: parseAction('accuse'))
+
+    myfont = pygame.font.SysFont("monospace", 20, (0,255,0))
+    if isTurn:
+        #smallText = pygame.font.Font("freesansbold.ttf",20, (0,255,0))
+
+        textSurf, textRect = text_objects("YOUR TURN", myfont)
+        textRect.center = ( (960+(70)), (300) )
+        DISPLAYSURF.blit(textSurf, textRect)
+
+    else:
+        #cover up the text with a white rectangle
+        pygame.draw.rect(DISPLAYSURF, (255, 255, 255), (960,280,1100,40))
+    textSurf, textRect = text_objects("You are", myfont)
+    textRect.center = ( (960+(70)), (500) )
+    DISPLAYSURF.blit(textSurf, textRect)
+
+    myfont = pygame.font.SysFont("monospace", 15, (0,255,0))
+    textSurf, textRect = text_objects(players[0].name, myfont)
+    textRect.center = ( (960+(70)), (550) )
+    DISPLAYSURF.blit(textSurf, textRect)
+
+    pygame.display.update()
     if not updated:
         return
     if not gameStarted:
@@ -681,35 +745,8 @@ def main():
     Update will change the game state (or process state update message as client)
     Render will draw all graphical items based on that state (no render for host)
     '''
-    global clock, DISPLAYSURF, black, white, IMAGESDICT
-    pygame.init()
-    clock = pygame.time.Clock()
-    DISPLAYSURF = pygame.display.set_mode((960, 720))
-    pygame.display.set_caption('Clueless')
-    black = (0,0,0)
-    white = (255,255,255)
-    DISPLAYSURF.fill(white)
 
-    IMAGESDICT = {'gameboard': pygame.image.load('gameboard.png'),
-                  'greenplayer': pygame.image.load('green.png'),
-                  'mustardplayer': pygame.image.load('mustard.png'),
-                  'scarletplayer': pygame.image.load('scarlett.png'),
-                  'whiteplayer': pygame.image.load('white.png'),
-                  'plumplayer': pygame.image.load('plum.png'),
-                  'peacockplayer': pygame.image.load('peacock.png')}
-
-    currentImage = 0
-    PLAYERIMAGES = [IMAGESDICT['greenplayer'],
-                    IMAGESDICT['mustardplayer'],
-                    IMAGESDICT['scarletplayer'],
-                    IMAGESDICT['whiteplayer'],
-                    IMAGESDICT['plumplayer'],
-                    IMAGESDICT['peacockplayer']]
-
-    # game_intro(DISPLAYSURF, clock) # not taking player input any more, to simplify and get this working, skip this
-
-    initialize(DISPLAYSURF, PLAYERIMAGES, clock)
-
+    initGUI()
     global game_won
     while not game_won:
         for event in pygame.event.get():
@@ -720,7 +757,6 @@ def main():
         action = getInput()
         update(action)
         render()
-        pygame.display.update()
 
     # game_won = True, what else? cleanup? TODO
     # FIX HERE - game just closes when won - would be okay if just running command line
