@@ -134,7 +134,7 @@ def initPlayers(numPlayers):
             mainBoard.rooms[roomIdx].addPlayer(players[playerIdx]) #kinda bad encapsulation but thats pythons fault
 
     mainBoard.updatePlayerLocationsOnBoard()
-    pygame.display.update()
+    # pygame.display.update()
 
 def button(msg,x,y,w,h,ac, action = None):
     mouse = pygame.mouse.get_pos()
@@ -274,7 +274,7 @@ def cardToString(cards):
             val = 'Mrs. White'
         elif card == 14:
             val = 'Mrs. Peacock'
-        elif card == 14:
+        elif card == 15:
             val = 'Rope'
         elif card == 16:
             val = 'Lead pipe'
